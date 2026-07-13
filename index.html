@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lukes Sequential Lay Calculator</title>
+    <!-- Premium Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-main: #f8fafc;
+            --card-bg: #ffffff;
+            --border: #e2e8f0;
+            --border-hover: #cbd5e1;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --primary: #0284c7;
+            --primary-hover: #0369a1;
+            --primary-light: #f0f9ff;
+            --success: #16a34a;
+            --success-bg: #f0fdf4;
+            --success-border: #bbf7d0;
+            --danger: #dc2626;
+            --danger-bg: #fef2f2;
+            --danger-border: #fecaca;
+            --accent: #f8fafc;
+            --override-bg: #fffbf7;
+            --override-border: #fed7aa;
+            --font-sans: 'Plus Jakarta Sans', -apple-system, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.04), 0 4px 6px -4px rgb(0 0 0 / 0.04);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            margin: 0;
+            padding: 24px 16px;
+            line-height: 1.5;
+        }
+
+        .workspace-header {
+            max-width: 1400px;
+            margin: 0 auto 24px auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            background: var(--card-bg);
+            padding: 20px 28px;
+            border-radius: 16px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+        }
+
+        @media (min-width: 640px) {
+            .workspace-header {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+        }
+
+        .workspace-header h1 { 
+            margin: 0; 
+            font-size: 1.6rem; 
+            font-weight: 800;
+            color: var(--text-main); 
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: -0.025em;
+        }
+
+        .workspace-header h1 span.brand-sequential {
+            color: var(--primary);
+        }
+
+        .acca-card {
+            max-width: 1400px;
+            margin: 0 auto 28px auto;
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            transition: box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+
+        .acca-card:hover {
+            box-shadow: var(--shadow-lg);
+            border-color: var(--border-hover);
+        }
+
+        .acca-header {
+            background: #fdfdfd;
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .title-input {
+            font-size: 1.15rem;
+            font-weight: 700;
+            border: 1.5px dashed transparent;
+            background: transparent;
+            color: var(--text-main);
+            padding: 6px 12px;
+            width: 100%;
+            max-width: 400px;
+            border-radius: 8px;
+            transition: all 0.15s ease;
+        }
+        .title-input:hover {
+            border-color: var(--border);
+            background: #f8fafc;
+        }
+        .title-input:focus {
+            border-color: var(--primary);
+            background: #fff;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12);
+        }
+
+        .acca-body { padding: 24px; }
+
+        .config-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            background: #f0fdfa;
+            border: 1px solid #ccfbf1;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            align-items: stretch;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            justify-content: space-between;
+        }
+
+        label {
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: #115e59;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .config-bar label {
+            color: #0f766e;
+        }
+
+        input, select {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            background: #fff;
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            transition: all 0.15s ease;
+            width: 100%;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12);
+        }
+
+        /* Responsive range slider styling */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: #cbd5e1;
+            height: 6px;
+            border-radius: 9999px;
+            padding: 0;
+            border: none;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            background: #0d9488;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            transition: transform 0.1s ease;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+        }
+
+        .legs-container { 
+            margin-bottom: 28px; 
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .legs-inner-table {
+            width: 100%;
+            min-width: 900px;
+            border-collapse: collapse;
+        }
+
+        .leg-header-row th {
+            padding: 14px 16px;
+            font-weight: 700;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background: #f8fafc;
+            border-bottom: 1px solid var(--border);
+            text-align: left;
+        }
+
+        .leg-row {
+            background: #fff;
+            border-bottom: 1px solid var(--border);
+            transition: background-color 0.1s ease;
+        }
+
+        .leg-row:last-child {
+            border-bottom: none;
+        }
+
+        .leg-row:hover {
+            background: #fafcfd;
+        }
+
+        .leg-row td {
+            padding: 12px 16px;
+            vertical-align: middle;
+        }
+
+        .override-input {
+            background-color: var(--override-bg);
+            border-color: var(--override-border);
+            font-weight: 600;
+        }
+
+        .override-input::placeholder {
+            color: #ea580c;
+            opacity: 0.65;
+            font-weight: 600;
+        }
+
+        .leg-num { 
+            font-weight: 800; 
+            color: var(--primary); 
+            text-align: center;
+            background: var(--primary-light);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+        }
+
+        .notes-input { 
+            font-size: 0.85rem; 
+            color: var(--text-muted); 
+        }
+
+        /* Buttons Styling */
+        .btn {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.15s ease;
+            box-shadow: var(--shadow-sm);
+        }
+        .btn-primary { 
+            background: var(--primary); 
+            color: white; 
+        }
+        .btn-primary:hover { 
+            background: var(--primary-hover); 
+            transform: translateY(-1px);
+        }
+        .btn-danger { 
+            background: var(--danger); 
+            color: white; 
+        }
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+        .btn-secondary { 
+            background: #f1f5f9; 
+            color: #475569; 
+            box-shadow: none;
+            border: 1px solid var(--border);
+        }
+        .btn-secondary:hover {
+            background: #e2e8f0;
+            color: var(--text-main);
+        }
+
+        .outputs-section { 
+            background: #ffffff; 
+            border: 1px solid var(--border); 
+            border-radius: 12px; 
+            padding: 24px; 
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .outputs-section h4 { 
+            margin-top: 0; 
+            margin-bottom: 16px; 
+            color: var(--text-main); 
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .outputs-table-wrapper {
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .outputs-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            font-size: 0.9rem; 
+            min-width: 800px;
+        }
+        
+        .outputs-table th, .outputs-table td { 
+            padding: 14px 16px; 
+            text-align: left; 
+            border-bottom: 1px solid var(--border); 
+        }
+        
+        .outputs-table th { 
+            background: #f8fafc; 
+            font-weight: 700; 
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .win-cell { 
+            background-color: var(--success-bg); 
+            color: var(--success); 
+            font-weight: 700; 
+            border-left: 4px solid var(--success);
+        }
+        .loss-cell { 
+            background-color: var(--danger-bg); 
+            color: var(--danger); 
+            font-weight: 700; 
+            border-left: 4px solid var(--danger);
+        }
+        
+        /* Better Color Coded Path Badge Elements */
+        .badge-container {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .badge-segment {
+            font-family: var(--font-mono);
+            font-weight: 800;
+            font-size: 0.8rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            text-shadow: 0 1px 0px rgba(255,255,255,0.4);
+            box-shadow: inset 0 -1px 0px rgba(0,0,0,0.1);
+        }
+
+        .badge-segment.badge-win {
+            background-color: #dcfce7;
+            color: #15803d;
+            border: 1px solid #bbf7d0;
+        }
+
+        .badge-segment.badge-loss {
+            background-color: #fee2e2;
+            color: #b91c1c;
+            border: 1px solid #fecaca;
+        }
+
+        .badge-divider {
+            color: #cbd5e1;
+            font-weight: 500;
+            font-size: 0.8rem;
+        }
+
+        .workspace-footer {
+            max-width: 1400px;
+            margin: 0 auto;
+            text-align: center;
+            padding: 24px 0;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="workspace-header">
+    <h1>
+        <span class="material-icons" style="color:var(--primary); font-size:1.8rem;">calculate</span> 
+        Lukes <span class="brand-sequential">Sequential</span> Lay Calculator
+    </h1>
+    <button class="btn btn-primary" onclick="createNewAcca()">
+        <span class="material-icons" style="font-size:1.2rem;">add_circle_outline</span> Create New Accumulator
+    </button>
+</div>
+
+<div id="workspaceRoot"></div>
+
+<div class="workspace-footer">
+    Lukes Sequential Lay Calculator &copy; 2026. Custom Built For Precision Matched Betting.
+</div>
+
+<script>
+    let accaInstances = [];
+    let instanceIdCounter = 0;
+
+    function createNewAcca() {
+        const id = instanceIdCounter++;
+        accaInstances.push({
+            id: id,
+            title: `Accumulator Campaign #${id + 1}`,
+            betType: "normal",
+            underlayBias: 100, 
+            backStake: 10.00,
+            backOdds: 5.00,
+            legs: [
+                { name: "Man United", odds: 2.00, commission: 0.0, actualLay: 0, notes: "Saturday 15:00" },
+                { name: "Arsenal", odds: 1.85, commission: 0.0, actualLay: 0, notes: "Saturday 17:30" },
+                { name: "Chelsea", odds: 2.10, commission: 0.0, actualLay: 0, notes: "Sunday 14:00" }
+            ]
+        });
+        renderWorkspace();
+    }
+
+    function removeInstance(id) {
+        accaInstances = accaInstances.filter(item => item.id !== id);
+        renderWorkspace();
+    }
+
+    function addLegToInstance(id) {
+        const inst = accaInstances.find(item => item.id === id);
+        if (inst && inst.legs.length < 12) {
+            inst.legs.push({
+                name: `Leg ${inst.legs.length + 1} Selection`,
+                odds: 2.00,
+                commission: 0.0,
+                actualLay: 0,
+                notes: ""
+            });
+            renderWorkspace();
+        }
+    }
+
+    function removeLegFromInstance(id, index) {
+        const inst = accaInstances.find(item => item.id === id);
+        if (inst && inst.legs.length > 2) {
+            inst.legs.splice(index, 1);
+            renderWorkspace();
+        }
+    }
+
+    function updateField(id, key, value, index = null) {
+        const inst = accaInstances.find(item => item.id === id);
+        if (!inst) return;
+
+        if (index !== null) {
+            if (key === 'odds' || key === 'commission' || key === 'actualLay') {
+                inst.legs[index][key] = parseFloat(value) || 0;
+            } else {
+                inst.legs[index][key] = value;
+            }
+        } else {
+            if (key === 'backStake' || key === 'backOdds' || key === 'underlayBias') {
+                inst[key] = parseFloat(value) || 0;
+            } else {
+                inst[key] = value;
+            }
+        }
+        calculateInstance(id);
+    }
+
+    function calculateInstance(id) {
+        const inst = accaInstances.find(item => item.id === id);
+        if (!inst) return;
+
+        const resultsTable = document.getElementById(`results_${id}`);
+        if (!resultsTable) return;
+
+        const isSNR = (inst.betType === 'snr');
+        const biasFactor = inst.underlayBias / 100; 
+        
+        const backReturn = isSNR ? (inst.backStake * (inst.backOdds - 1)) : (inst.backStake * inst.backOdds);
+        const backCost = isSNR ? 0 : inst.backStake;
+        const numLegs = inst.legs.length;
+
+        // 1. Calculate Standard (0% Slider) Strategy: Break-even on early legs
+        let standardLays = [];
+        let runLiabilityStd = 0;
+        for (let i = 0; i < numLegs; i++) {
+            const leg = inst.legs[i];
+            const lComm = leg.commission / 100;
+            let stdLay = (backCost + runLiabilityStd) / (1 - lComm);
+            standardLays.push(stdLay);
+            runLiabilityStd += stdLay * (leg.odds - 1);
+        }
+
+        // 2. Calculate true 100% Lock-In (Standard Equal Return Math)
+        let lockInLays = new Array(numLegs);
+        let currentTarget = backReturn; 
+
+        // Work backward through accumulator legs to get accurate locked equal profit targets
+        for (let i = numLegs - 1; i >= 0; i--) {
+            const leg = inst.legs[i];
+            const lComm = leg.commission / 100;
+            
+            lockInLays[i] = currentTarget / (leg.odds - lComm);
+            currentTarget = lockInLays[i] * (1 - lComm);
+        }
+
+        // 3. Blending standard strategy & lock-in layouts
+        let legsData = [];
+        let cumulativeLiabilityIfWon = 0;
+
+        for (let i = 0; i < numLegs; i++) {
+            const leg = inst.legs[i];
+            const stdLay = standardLays[i];
+            const lockLay = lockInLays[i];
+            
+            let advisedLay = stdLay + (biasFactor * (lockLay - stdLay));
+            let finalUsedLay = (leg.actualLay > 0) ? leg.actualLay : advisedLay;
+
+            let liability = finalUsedLay * (leg.odds - 1);
+            cumulativeLiabilityIfWon += liability;
+
+            legsData.push({
+                index: i + 1,
+                advised: advisedLay,
+                actualUsed: finalUsedLay,
+                liability: liability,
+                isOverridden: leg.actualLay > 0
+            });
+
+            // TWEAK 1: Dynamic replacement of "Advised" placeholder inside input with the newly calculated value!
+            const overrideInput = document.getElementById(`override_${id}_${i}`);
+            if (overrideInput) {
+                overrideInput.placeholder = advisedLay.toFixed(2);
+            }
+        }
+
+        // 4. Render the Tactical Matrix table rows
+        let html = '';
+        legsData.forEach((ld, i) => {
+            const lComm = inst.legs[i].commission / 100;
+            const netLayPayout = ld.actualUsed * (1 - lComm);
+            
+            // Historical liabilities built up from previous sequential lay wins
+            let priorLiabilities = 0;
+            for(let prev = 0; prev < i; prev++) {
+                priorLiabilities += legsData[prev].liability;
+            }
+
+            // Net P&L = Winning lay outcome - back stake cost - liabilities dropped in prior legs
+            const netProfitIfLegLoses = netLayPayout - backCost - priorLiabilities;
+            const markerText = ld.isOverridden ? "⚠️ Override" : "✓ Advised";
+
+            // TWEAK 2: Better color coding of all Ws and Ls
+            let pathArr = [];
+            for(let p = 0; p < i; p++) pathArr.push("W");
+            pathArr.push("L");
+            
+            let pathHtml = `<div class="badge-container">`;
+            pathArr.forEach((char, idx) => {
+                const badgeClass = char === "W" ? "badge-win" : "badge-loss";
+                pathHtml += `<span class="badge-segment ${badgeClass}">${char}</span>`;
+                if(idx < pathArr.length - 1) {
+                    pathHtml += `<span class="badge-divider">➔</span>`;
+                }
+            });
+            pathHtml += `</div>`;
+
+            // Avoid negative zero styling quirks (-0.00)
+            const displayNet = Math.abs(netProfitIfLegLoses) < 0.01 ? 0 : netProfitIfLegLoses;
+            const cellClass = displayNet >= 0 ? 'win-cell' : 'loss-cell';
+
+            // TWEAK 3: Removed "Leg X:" prefix, just show selection name fails
+            html += `
+                <tr>
+                    <td>${pathHtml}</td>
+                    <td><strong>${inst.legs[i].name} Fails</strong></td>
+                    <td>£${ld.advised.toFixed(2)}</td>
+                    <td><span style="font-weight:700; color:${ld.isOverridden ? '#ea580c':'#0284c7'}">£${ld.actualUsed.toFixed(2)}</span></td>
+                    <td>£${ld.liability.toFixed(2)}</td>
+                    <td class="${cellClass}">£${displayNet.toFixed(2)}</td>
+                    <td><small style="font-weight:600; color:${ld.isOverridden ? '#ea580c':'#64748b'};">${markerText}</small></td>
+                </tr>
+            `;
+        });
+
+        // 5. Appending final "All Legs Win" outcome row
+        let allWinPathArr = Array(numLegs).fill("W");
+        let allWinPathHtml = `<div class="badge-container">`;
+        allWinPathArr.forEach((char, idx) => {
+            allWinPathHtml += `<span class="badge-segment badge-win">${char}</span>`;
+            if(idx < allWinPathArr.length - 1) {
+                allWinPathHtml += `<span class="badge-divider">➔</span>`;
+            }
+        });
+        allWinPathHtml += `</div>`;
+
+        const finalNetProfitIfAllWin = backReturn - backCost - cumulativeLiabilityIfWon;
+        const displayFinalNet = Math.abs(finalNetProfitIfAllWin) < 0.01 ? 0 : finalNetProfitIfAllWin;
+        const finalCellClass = displayFinalNet >= 0 ? 'win-cell' : 'loss-cell';
+
+        // Calculate Dynamic Strategy Status Label
+        let strategyStatus = "";
+        let strategyColor = "";
+        let strategyIcon = "";
+
+        if (inst.underlayBias === 0) {
+            strategyStatus = "Standard Break-Even";
+            strategyColor = "var(--text-muted)";
+            strategyIcon = "trending_flat";
+        } else if (inst.underlayBias === 100) {
+            strategyStatus = "Full Lock-In";
+            strategyColor = "var(--success)";
+            strategyIcon = "stars";
+        } else {
+            strategyStatus = `Hybrid Lock-In (${inst.underlayBias}%)`;
+            strategyColor = "var(--primary)";
+            strategyIcon = "insights";
+        }
+
+        html += `
+            <tr style="background-color: #fafdfb; border-top: 2px solid var(--border-hover);">
+                <td>${allWinPathHtml}</td>
+                <td><strong>All Legs Win (Accumulator Hits)</strong></td>
+                <td>-</td>
+                <td>-</td>
+                <td style="color:#115e59; font-weight:700;">Total: £${cumulativeLiabilityIfWon.toFixed(2)}</td>
+                <td class="${finalCellClass}">£${displayFinalNet.toFixed(2)}</td>
+                <td style="color:${strategyColor}; font-weight:700;">
+                    <span class="material-icons" style="font-size:1rem; vertical-align:middle; margin-top:-2px; color:${strategyColor};">${strategyIcon}</span> 
+                    ${strategyStatus}
+                </td>
+            </tr>
+        `;
+
+        resultsTable.innerHTML = html;
+    }
+
+    function renderWorkspace() {
+        const root = document.getElementById('workspaceRoot');
+        root.innerHTML = '';
+
+        if (accaInstances.length === 0) {
+            root.innerHTML = `
+                <div style="text-align:center; padding:80px 20px; background:#ffffff; border-radius:16px; border:1px solid var(--border); box-shadow:var(--shadow-sm);">
+                    <span class="material-icons" style="font-size:3rem; color:var(--text-muted); margin-bottom:12px;">layers_clear</span>
+                    <h3 style="margin-bottom:6px; font-weight:700;">No Active Accumulators</h3>
+                    <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;">Get started by launching a brand new sequential lay tracking environment.</p>
+                    <button class="btn btn-primary" onclick="createNewAcca()">+ Launch First Session</button>
+                </div>
+            `;
+            return;
+        }
+
+        accaInstances.forEach(inst => {
+            const card = document.createElement('div');
+            card.className = 'acca-card';
+
+            let legsHtml = '';
+            inst.legs.forEach((leg, index) => {
+                legsHtml += `
+                    <tr class="leg-row">
+                        <td><div class="leg-num">${index + 1}</div></td>
+                        <td>
+                            <input type="text" value="${leg.name}" placeholder="Manchester United" oninput="updateField(${inst.id}, 'name', this.value, ${index})">
+                        </td>
+                        <td>
+                            <input type="number" value="${leg.odds}" step="0.01" min="1.01" placeholder="Odds" oninput="updateField(${inst.id}, 'odds', this.value, ${index})">
+                        </td>
+                        <td>
+                            <input type="number" value="${leg.commission}" step="0.1" min="0" placeholder="Comm %" oninput="updateField(${inst.id}, 'commission', this.value, ${index})">
+                        </td>
+                        <td>
+                            <!-- TWEAK 1: Dynamic ID is provided so calculateInstance can dynamically update placeholder with live advised value -->
+                            <input type="number" id="override_${inst.id}_${index}" class="override-input" value="${leg.actualLay || ''}" placeholder="Calculating..." step="0.01" oninput="updateField(${inst.id}, 'actualLay', this.value, ${index})">
+                        </td>
+                        <td>
+                            <input type="text" class="notes-input" value="${leg.notes}" placeholder="Notes (e.g. Kickoff timing, match context...)" oninput="updateField(${inst.id}, 'notes', this.value, ${index})">
+                        </td>
+                        <td style="text-align:center;">
+                            <button class="btn-secondary" style="border-radius:50%; width:30px; height:30px; padding:0; border:none; cursor:pointer; display:inline-flex; align-items:center; justify-content:center;" onclick="removeLegFromInstance(${inst.id}, ${index})" ${inst.legs.length <= 2 ? 'disabled style="opacity:0.15; cursor:not-allowed;"' : ''}>
+                                <span class="material-icons" style="font-size:1.1rem; line-height:1;">close</span>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            card.innerHTML = `
+                <div class="acca-header">
+                    <input type="text" class="title-input" value="${inst.title}" oninput="updateField(${inst.id}, 'title', this.value)">
+                    <button class="btn btn-danger" onclick="removeInstance(${inst.id})">
+                        <span class="material-icons" style="font-size:1rem;">delete_forever</span> Delete Session
+                    </button>
+                </div>
+                <div class="acca-body">
+                    <div class="config-bar">
+                        <div class="input-group">
+                            <label>Bet Style Profile</label>
+                            <select onchange="updateField(${inst.id}, 'betType', this.value); calculateInstance(${inst.id});">
+                                <option value="normal" ${inst.betType === 'normal' ? 'selected' : ''}>Normal Qualifying Acca</option>
+                                <option value="snr" ${inst.betType === 'snr' ? 'selected' : ''}>Free Bet Acca (SNR)</option>
+                            </select>
+                        </div>
+                        <div class="input-group" style="grid-column: span 2;">
+                            <label style="display:flex; justify-content:space-between;">
+                                <span>Laying Strategy (Slider)</span>
+                                <span style="font-weight:800; color:#0d9488;"><span id="biasLabel_${inst.id}">${inst.underlayBias}</span>%</span>
+                            </label>
+                            <input type="range" min="0" max="100" value="${inst.underlayBias}" oninput="document.getElementById('biasLabel_${inst.id}').innerText=this.value; updateField(${inst.id}, 'underlayBias', this.value)">
+                            <div style="display:flex; justify-content:space-between; font-size:0.65rem; font-weight:800; color:#0f766e; margin-top:-2px;">
+                                <span>0% Standard (Break-Even)</span>
+                                <span>100% Lock-In (Equal Return)</span>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Back Stake (£)</label>
+                            <input type="number" value="${inst.backStake}" min="0.01" step="1" oninput="updateField(${inst.id}, 'backStake', this.value)">
+                        </div>
+                        <div class="input-group">
+                            <label>Total Back Odds</label>
+                            <input type="number" value="${inst.backOdds}" min="1.01" step="0.05" oninput="updateField(${inst.id}, 'backOdds', this.value)">
+                        </div>
+                    </div>
+
+                    <div style="display:flex; align-items:center; margin-bottom:12px;">
+                        <h4 style="margin:0; font-weight:700; color:var(--text-main); font-size:1rem;">Sequential Legs Setup</h4>
+                        <button class="btn btn-secondary" style="margin-left:auto; padding:6px 14px; font-size:0.8rem; height:36px;" onclick="addLegToInstance(${inst.id})" ${inst.legs.length >= 12 ? 'disabled' : ''}>
+                            <span class="material-icons" style="font-size:1rem;">add</span> Add Next Leg
+                        </button>
+                    </div>
+
+                    <div class="legs-container">
+                        <table class="legs-inner-table">
+                            <thead>
+                                <tr class="leg-header-row">
+                                    <th style="width: 70px;">Order</th>
+                                    <th style="width: 260px;">Event/Selection Name</th>
+                                    <th style="width: 120px;">Lay Odds</th>
+                                    <th style="width: 120px;">Exchange %</th>
+                                    <th style="width: 160px; color: #ea580c;">Lay Stake (£)</th>
+                                    <th>Leg-Specific Workspace Tracking Notes</th>
+                                    <th style="width: 60px; text-align:center;"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${legsHtml}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="outputs-section">
+                        <h4>
+                            <span class="material-icons" style="color:var(--primary); font-size:1.3rem;">alt_route</span>
+                            Leg-by-Leg Profit Outcomes
+                        </h4>
+                        <div class="outputs-table-wrapper">
+                            <table class="outputs-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 140px;">Path</th>
+                                        <th style="width: 250px;">Scenario Outcome</th>
+                                        <th>Advised Lay</th>
+                                        <th>Lay Stake</th>
+                                        <th>Liability</th>
+                                        <th>Net P&L Return</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="results_${inst.id}"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            root.appendChild(card);
+            calculateInstance(inst.id);
+        });
+    }
+
+    // Boot App
+    createNewAcca();
+</script>
+
+</body>
+</html>
