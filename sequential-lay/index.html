@@ -4,33 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Luke's Sequential Lay Calculator</title>
-    <!-- Premium Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    
     <style>
         :root {
-            --bg-main: #f1f5f9;
+            --bg-main: #f8fafc;
             --card-bg: #ffffff;
-            --border: #cbd5e1;
+            --border: #e2e8f0;
             --text-main: #0f172a;
-            --text-muted: #475569;
-            --primary: #0284c7;
-            --primary-hover: #0369a1;
-            --success: #16a34a;
-            --success-bg: #f0fdf4;
-            --danger: #dc2626;
-            --danger-bg: #fef2f2;
+            --text-muted: #64748b;
+            --primary: #0f172a;
+            --primary-hover: #334155;
+            --success: #059669;
+            --success-bg: #d1fae5;
+            --danger: #e11d48;
+            --danger-bg: #ffe4e6;
             --accent: #f8fafc;
-            --override-bg: #fff7ed;
+            --override-bg: #fffbeb;
+            --disabled: #e2e8f0;
         }
 
-        body {
-            font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
-            background-color: var(--bg-main);
-            color: var(--text-main);
-            margin: 0;
-            padding: 20px;
+        body { 
+            font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; 
+            background-color: var(--bg-main); 
+            color: var(--text-main); 
+            margin: 0; 
+            padding: 20px; 
         }
 
         .workspace-header {
@@ -45,7 +46,13 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
 
-        .workspace-header h1 { margin: 0; font-size: 1.5rem; color: #0369a1; }
+        .workspace-header h1 { 
+            margin: 0; 
+            font-size: 1.5rem; 
+            color: var(--text-main); 
+            font-weight: 800; 
+            letter-spacing: -0.02em; 
+        }
 
         .acca-card {
             max-width: 1400px;
@@ -53,54 +60,30 @@
             background: var(--card-bg);
             border-radius: 12px;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border);
             overflow: hidden;
         }
 
-        .acca-header {
-            background: #f8fafc;
-            padding: 15px 20px;
-            border-bottom: 1px solid #e2e8f0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .acca-header { 
+            background: var(--accent); 
+            padding: 15px 20px; 
+            border-bottom: 1px solid var(--border); 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
         }
-
-        .title-input {
-            font-size: 1.2rem;
-            font-weight: 700;
-            border: 1px dashed transparent;
-            background: transparent;
-            color: var(--text-main);
-            padding: 4px 8px;
-            width: 350px;
-            border-radius: 4px;
-            font-family: inherit;
-        }
-        .title-input:hover, .title-input:focus {
-            border-color: var(--border);
-            background: #fff;
-            outline: none;
-        }
-
+        
         .acca-body { padding: 20px; }
-
-        .config-bar {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px;
-            background: #f0fdfa;
-            border: 1px solid #ccfbf1;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            align-items: center;
-        }
-
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
+        
+        .config-bar { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
+            gap: 15px; 
+            background: var(--accent); 
+            border: 1px solid var(--border); 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin-bottom: 20px; 
         }
 
         label {
@@ -109,6 +92,8 @@
             color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.05em;
+            display: block;
+            margin-bottom: 5px;
         }
 
         input, select, textarea {
@@ -116,108 +101,135 @@
             border: 1px solid var(--border);
             border-radius: 6px;
             font-size: 0.95rem;
-            background: #fff;
+            background: #f8fafc;
             color: var(--text-main);
             font-family: inherit;
             box-sizing: border-box;
             width: 100%;
+            transition: all 0.2s ease;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #94a3b8;
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.15);
         }
 
         textarea {
             resize: none;
-            height: 38px;
+            overflow: hidden;
             min-height: 38px;
-            line-height: 1.4;
-            overflow-y: hidden;
         }
 
-        .legs-container { margin-bottom: 25px; }
-
-        .leg-header-row {
-            display: grid;
-            grid-template-columns: 50px 1.8fr 0.8fr 0.8fr 1.6fr 2fr 40px;
-            gap: 12px;
-            padding: 5px 10px;
-            font-weight: bold;
-            font-size: 0.8rem;
-            color: var(--text-muted);
+        .title-input {
+            font-size: 1.1rem;
+            font-weight: 700;
+            border: none;
+            background: transparent;
+            padding: 5px;
+            max-width: 300px;
         }
-
-        .leg-row {
-            display: grid;
-            grid-template-columns: 50px 1.8fr 0.8fr 0.8fr 1.6fr 2fr 40px;
-            gap: 12px;
-            align-items: start;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            padding: 12px 10px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-        }
-
-        .override-input {
-            background-color: var(--override-bg);
-            border-color: #fbd38d;
-            font-weight: 600;
-        }
-
-        .leg-num { 
-            font-weight: bold; 
-            color: var(--primary); 
-            text-align: center; 
-            margin-top: 10px;
-        }
-        .notes-input { font-size: 0.85rem; color: #475569; }
 
         .btn {
-            padding: 8px 14px;
+            padding: 8px 16px;
             border: none;
             border-radius: 6px;
             font-weight: 600;
             cursor: pointer;
             font-size: 0.85rem;
-            font-family: inherit;
+            transition: all 0.2s;
         }
+
         .btn-primary { background: var(--primary); color: white; }
         .btn-primary:hover { background: var(--primary-hover); }
         .btn-danger { background: var(--danger); color: white; }
-        .btn-secondary { background: #e2e8f0; color: var(--text-muted); }
+        .btn-secondary { background: var(--border); color: var(--text-muted); }
 
-        .outputs-section { background: #fafafa; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; }
-        .outputs-section h4 { margin-top: 0; margin-bottom: 12px; color: var(--text-muted); }
-        .outputs-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-        .outputs-table th, .outputs-table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
-        .outputs-table th { background: #f1f5f9; font-weight: 600; }
-
-        .win-cell { background-color: var(--success-bg); color: var(--success); font-weight: 700; }
-        .loss-cell { background-color: var(--danger-bg); color: var(--danger); font-weight: 700; }
-        
-        .path-container {
-            display: inline-flex;
-            gap: 3px;
-            align-items: center;
+        .leg-row { 
+            display: grid; 
+            grid-template-columns: 40px 1.8fr 0.8fr 0.8fr 1.0fr 2.2fr 60px 1fr 40px; 
+            gap: 10px; 
+            align-items: center; 
+            background: #f8fafc; 
+            border: 1px solid var(--border); 
+            padding: 10px; 
+            border-radius: 8px; 
+            margin-bottom: 10px; 
+            transition: all 0.2s ease; 
         }
-        .path-badge {
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 700;
-            font-size: 0.8rem;
-            width: 22px;
-            height: 22px;
+
+        .leg-row.completed { 
+            background: var(--border); 
+            filter: grayscale(1) brightness(0.95);
+            opacity: 0.7;
+        }
+
+        .leg-num { 
+            font-weight: 800; 
+            color: var(--text-muted); 
+            text-align: center;
+            background: var(--border);
+            width: 24px;
+            height: 24px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            border-radius: 4px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            border-radius: 6px;
+            margin: 0 auto;
         }
-        .path-badge.win {
-            background-color: var(--success-bg);
-            color: var(--success);
-            border: 1px solid #bbf7d0;
+
+        .advised-display {
+            font-weight: 700;
+            color: var(--primary);
+            text-align: right;
+            padding-right: 10px;
         }
-        .path-badge.loss {
-            background-color: var(--danger-bg);
-            color: var(--danger);
-            border: 1px solid #fecaca;
+
+        .actual-lay-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .override-input { background-color: var(--override-bg); border-color: #fbd38d; font-weight: 600; }
+        
+        .lay-slider { width: 100%; height: 4px; cursor: pointer; }
+        
+        textarea.notes-input { 
+            font-size: 0.85rem; 
+            color: var(--text-muted); 
+            background-color: transparent;
+            border: 1px dashed transparent;
+        }
+        
+        textarea.notes-input:hover, textarea.notes-input:focus {
+            border-color: var(--border);
+            background-color: #fff;
+        }
+
+        .outputs-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9rem; }
+        .outputs-table th { text-align: left; padding: 12px; color: var(--text-muted); font-weight: 700; border-bottom: 2px solid var(--border); }
+        .outputs-table td { padding: 12px; border-bottom: 1px solid var(--border); }
+        
+        .win-cell { background-color: var(--success-bg); color: var(--success); font-weight: 700; }
+        .loss-cell { background-color: var(--danger-bg); color: var(--danger); font-weight: 700; }
+        
+        .path-badge { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; display: inline-block; }
+        .path-badge.win { background-color: var(--success-bg); color: var(--success); border: 1px solid #bbf7d0; }
+        .path-badge.loss { background-color: var(--danger-bg); color: var(--danger); border: 1px solid #fecaca; }
+        .path-arrow { color: #94a3b8; font-size: 0.8rem; font-weight: bold; margin: 0 2px; }
+        .path-container { display: flex; align-items: center; flex-wrap: wrap; gap: 2px; }
+        
+        .leg-header-row {
+            display: grid; 
+            grid-template-columns: 40px 1.8fr 0.8fr 0.8fr 1.0fr 2.2fr 60px 1fr 40px; 
+            gap: 10px; 
+            padding: 0 10px 10px 10px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
         }
     </style>
 </head>
@@ -245,12 +257,12 @@
             id: id,
             title: `Accumulator Session #${id + 1}`,
             betType: "normal",
-            underlayBias: 100, 
-            backStake: "",
-            backOdds: "",
+            underlayBias: 100,
+            backStake: 10,
+            backOdds: 5.0,
             legs: [
-                { name: "", odds: "", commission: 0, actualLay: "", notes: "" },
-                { name: "", odds: "", commission: 0, actualLay: "", notes: "" }
+                { name: "Leg 1", odds: 6.0, commission: 2, actualLay: "", notes: "", completed: false },
+                { name: "Leg 2", odds: 10.0, commission: 2, actualLay: "", notes: "", completed: false }
             ]
         });
         renderWorkspace();
@@ -264,7 +276,7 @@
     function addLegToInstance(id) {
         const inst = accaInstances.find(item => item.id === id);
         if (inst && inst.legs.length < 8) {
-            inst.legs.push({ name: "", odds: "", commission: 0, actualLay: "", notes: "" });
+            inst.legs.push({ name: "", odds: "", commission: 2, actualLay: "", notes: "", completed: false });
             renderWorkspace();
         }
     }
@@ -280,15 +292,20 @@
     function updateField(id, key, value, index = null) {
         const inst = accaInstances.find(item => item.id === id);
         if (!inst) return;
+        
         if (index !== null) {
             inst.legs[index][key] = value;
+            if (key === 'completed') {
+                const row = document.getElementById(`leg_row_${id}_${index}`);
+                if (row) row.classList.toggle('completed', value);
+            }
         } else {
             inst[key] = value;
         }
+        
         calculateInstance(id);
     }
 
-    // Surgical Update for inputs/labels without re-rendering everything
     function calculateInstance(id) {
         const inst = accaInstances.find(item => item.id === id);
         if (!inst) return;
@@ -302,6 +319,7 @@
         const backCost = isSNR ? 0 : bStake;
         const numLegs = inst.legs.length;
 
+        // Calculate Standard Lays (Equal profit if any leg loses)
         let standardLays = [];
         let runLiabilityStd = 0;
         for (let i = 0; i < numLegs; i++) {
@@ -312,6 +330,7 @@
             runLiabilityStd += stdLay * (Math.max(1, lOdds) - 1);
         }
 
+        // Calculate Lock-In Lays (Max profit if all legs win, zero if early loss)
         let lockInLays = new Array(numLegs).fill(0);
         let currentTarget = backReturn;
         for (let i = numLegs - 1; i >= 0; i--) {
@@ -328,22 +347,33 @@
             const advised = standardLays[i] + (biasFactor * (lockInLays[i] - standardLays[i]));
             const usedVal = parseFloat(leg.actualLay);
             const actualUsed = isNaN(usedVal) ? advised : usedVal;
+            
             const lOdds = parseFloat(leg.odds) || 0;
             const liability = actualUsed * (Math.max(1, lOdds) - 1);
             cumulativeLiabilityIfWon += liability;
             
             legsData.push({ advised, actualUsed, liability });
             
-            // Sync UI inputs if they differ
+            const advisedDisplay = document.getElementById(`advised_${id}_${i}`);
             const inputEl = document.getElementById(`override_${id}_${i}`);
-            if (inputEl && inputEl.placeholder !== `£${advised.toFixed(2)}`) {
-                inputEl.placeholder = `£${advised.toFixed(2)}`;
+            const sliderEl = document.getElementById(`slider_${id}_${i}`);
+            
+            if (advisedDisplay) advisedDisplay.innerText = `£${advised.toFixed(2)}`;
+            if (inputEl && document.activeElement !== inputEl) {
+                inputEl.value = actualUsed.toFixed(2);
+            }
+            if (sliderEl) {
+                const calculatedMax = Math.max(advised * 2, actualUsed * 1.1, 10);
+                sliderEl.max = calculatedMax.toFixed(2);
+                if (document.activeElement !== sliderEl) {
+                    sliderEl.value = actualUsed.toFixed(2);
+                }
             }
         });
 
-        // Update Table
         const resultsTable = document.getElementById(`results_${id}`);
         if (!resultsTable) return;
+
         let html = '';
         legsData.forEach((ld, i) => {
             const leg = inst.legs[i];
@@ -354,7 +384,9 @@
             const displayNet = Math.abs(netProfitIfLegLoses) < 0.01 ? 0 : netProfitIfLegLoses;
             
             let pathHtml = '<div class="path-container">';
-            for(let p=0; p<i; p++) pathHtml += `<span class="path-badge win">W</span>`;
+            for(let p = 0; p < i; p++) {
+                pathHtml += `<span class="path-badge win">W</span><span class="path-arrow">→</span>`;
+            }
             pathHtml += `<span class="path-badge loss">L</span></div>`;
 
             html += `<tr>
@@ -364,24 +396,26 @@
                 <td>£${ld.actualUsed.toFixed(2)}</td>
                 <td>£${ld.liability.toFixed(2)}</td>
                 <td class="${displayNet >= 0 ? 'win-cell' : 'loss-cell'}">£${displayNet.toFixed(2)}</td>
-                <td><small>${ld.actualUsed !== ld.advised ? "⚠️ Override" : "✓ Advised"}</small></td>
             </tr>`;
         });
 
+        // Add summary row for all legs winning
         let allWinPathHtml = '<div class="path-container">';
-        for(let p=0; p<numLegs; p++) allWinPathHtml += `<span class="path-badge win">W</span>`;
+        for(let p = 0; p < numLegs; p++) {
+            allWinPathHtml += `<span class="path-badge win">W</span>`;
+            if (p < numLegs - 1) allWinPathHtml += `<span class="path-arrow">→</span>`;
+        }
         allWinPathHtml += '</div>';
 
         const finalNet = (backReturn - backCost - cumulativeLiabilityIfWon);
-        let strategyLabel = inst.underlayBias == 0 ? "Standard Break-Even" : inst.underlayBias == 100 ? "Full Lock-In" : `Hybrid Lock-In (${inst.underlayBias}%)`;
+        const displayFinalNet = Math.abs(finalNet) < 0.01 ? 0 : finalNet;
         
-        html += `<tr style="background:#f8fafc; border-top:2px solid #cbd5e1;">
+        html += `<tr style="background:var(--accent); border-top:2px solid var(--border);">
             <td>${allWinPathHtml}</td>
             <td><strong>All Legs Win</strong></td>
             <td>-</td><td>-</td>
             <td>Total Liab: £${cumulativeLiabilityIfWon.toFixed(2)}</td>
-            <td class="${finalNet >= 0 ? 'win-cell' : 'loss-cell'}">£${finalNet.toFixed(2)}</td>
-            <td><strong>${strategyLabel}</strong></td>
+            <td class="${displayFinalNet >= 0 ? 'win-cell' : 'loss-cell'}">£${displayFinalNet.toFixed(2)}</td>
         </tr>`;
         resultsTable.innerHTML = html;
     }
@@ -389,22 +423,28 @@
     function renderWorkspace() {
         const root = document.getElementById('workspaceRoot');
         root.innerHTML = '';
+        
         accaInstances.forEach(inst => {
             const card = document.createElement('div');
             card.className = 'acca-card';
+            
             let legsHtml = '';
             inst.legs.forEach((leg, index) => {
                 legsHtml += `
-                    <div class="leg-row">
+                    <div class="leg-row ${leg.completed ? 'completed' : ''}" id="leg_row_${inst.id}_${index}">
                         <div class="leg-num">#${index + 1}</div>
                         <textarea placeholder="Event" oninput="updateField(${inst.id}, 'name', this.value, ${index}); autoGrow(this)">${leg.name}</textarea>
                         <input type="number" value="${leg.odds}" step="0.05" placeholder="Odds" oninput="updateField(${inst.id}, 'odds', this.value, ${index})">
                         <input type="number" value="${leg.commission}" step="0.5" placeholder="0" oninput="updateField(${inst.id}, 'commission', this.value, ${index})">
-                        <div style="display:flex; flex-direction:column; gap:4px;">
+                        <div class="advised-display" id="advised_${inst.id}_${index}">£0.00</div>
+                        <div class="actual-lay-group">
                             <input type="number" id="override_${inst.id}_${index}" class="override-input" value="${leg.actualLay || ''}" placeholder="£0.00" step="0.01" oninput="updateField(${inst.id}, 'actualLay', this.value, ${index})">
-                            <input type="range" min="0" max="200" value="${((parseFloat(leg.actualLay)||0) / 100) * 100}" oninput="updateField(${inst.id}, 'actualLay', (this.value * 1), ${index}); document.getElementById('override_${inst.id}_${index}').value = this.value">
+                            <input type="range" id="slider_${inst.id}_${index}" class="lay-slider" min="0" max="100" step="0.01" value="${leg.actualLay || 0}" oninput="updateField(${inst.id}, 'actualLay', this.value, ${index}); document.getElementById('override_${inst.id}_${index}').value = this.value">
                         </div>
-                        <input type="text" class="notes-input" value="${leg.notes}" placeholder="e.g. Sat 15:00" oninput="updateField(${inst.id}, 'notes', this.value, ${index})">
+                        <div style="text-align:center;">
+                            <input type="checkbox" title="Mark as complete" ${leg.completed ? 'checked' : ''} onchange="updateField(${inst.id}, 'completed', this.checked, ${index})">
+                        </div>
+                        <textarea class="notes-input" placeholder="Notes" oninput="updateField(${inst.id}, 'notes', this.value, ${index}); autoGrow(this)">${leg.notes}</textarea>
                         <button class="btn-secondary" style="border-radius:50%; width:28px; height:28px; padding:0; border:none; cursor:pointer;" onclick="removeLegFromInstance(${inst.id}, ${index})" ${inst.legs.length <= 2 ? 'disabled style="opacity:0.2;"' : ''}>×</button>
                     </div>
                 `;
@@ -417,52 +457,82 @@
                 </div>
                 <div class="acca-body">
                     <div class="config-bar">
-                        <div class="input-group">
+                        <div>
                             <label>Bet Style</label>
                             <select onchange="updateField(${inst.id}, 'betType', this.value); calculateInstance(${inst.id});">
-                                <option value="normal" ${inst.betType === 'normal' ? 'selected' : ''}>Normal</option>
+                                <option value="normal" ${inst.betType === 'normal' ? 'selected' : ''}>Normal Qualifying</option>
                                 <option value="snr" ${inst.betType === 'snr' ? 'selected' : ''}>Free Bet (SNR)</option>
                             </select>
                         </div>
-                        <div class="input-group" style="grid-column: span 2;">
-                            <label>Strategy: <span id="biasLabel_${inst.id}">${inst.underlayBias}</span>%</label>
-                            <input type="range" min="0" max="100" value="${inst.underlayBias}" oninput="document.getElementById('biasLabel_${inst.id}').innerText=this.value; updateField(${inst.id}, 'underlayBias', this.value)">
+                        <div style="grid-column: span 2;">
+                            <label>Underlay Strategy: <span id="biasLabel_${inst.id}">${inst.underlayBias}</span>%</label>
+                            <input type="range" min="0" max="100" value="${inst.underlayBias}" style="cursor: pointer;" oninput="document.getElementById('biasLabel_${inst.id}').innerText=this.value; updateField(${inst.id}, 'underlayBias', this.value)">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); margin-top: 5px;">
+                                <span>0% (Standard)</span>
+                                <span>100% (Lock-In)</span>
+                            </div>
                         </div>
-                        <div class="input-group">
+                        <div>
                             <label>Back Stake (£)</label>
-                            <input type="number" value="${inst.backStake}" oninput="updateField(${inst.id}, 'backStake', this.value)">
+                            <input type="number" step="0.1" value="${inst.backStake}" oninput="updateField(${inst.id}, 'backStake', this.value)">
                         </div>
-                        <div class="input-group">
+                        <div>
                             <label>Total Back Odds</label>
                             <input type="number" value="${inst.backOdds}" step="0.1" oninput="updateField(${inst.id}, 'backOdds', this.value)">
                         </div>
                     </div>
+                    
                     <div style="display:flex; align-items:center; margin-bottom:10px;">
-                        <h4 style="margin:0; color:var(--text-muted);">Sequential Legs Setup</h4>
+                        <h4 style="margin:0; color:var(--text-main); font-size: 1.1rem; font-weight: 700;">Sequential Legs Setup</h4>
                         <button class="btn btn-secondary" style="margin-left:auto;" onclick="addLegToInstance(${inst.id})" ${inst.legs.length >= 8 ? 'disabled' : ''}>+ Add Next Leg</button>
                     </div>
+                    
                     <div class="legs-container">
                         <div class="leg-header-row">
-                            <div>Order</div><div>Event</div><div>Odds</div><div>Comm %</div>
-                            <div>Lay Stake (£)</div><div>Notes</div><div></div>
+                            <div>#</div>
+                            <div>Event / Selection</div>
+                            <div>Lay Odds</div>
+                            <div>Comm %</div>
+                            <div style="text-align: right; padding-right: 10px;">Advised</div>
+                            <div>Actual Lay Stake</div>
+                            <div style="text-align: center;">Done</div>
+                            <div>Notes</div>
+                            <div></div>
                         </div>
                         ${legsHtml}
                     </div>
-                    <div class="outputs-section">
-                        <h4>Leg-by-Leg Profit Outcomes</h4>
+                    
+                    <div class="outputs-section" style="margin-top: 25px;">
+                        <h4 style="margin:0; color:var(--text-main); font-size: 1.1rem; font-weight: 700;">Leg-by-Leg Profit Outcomes</h4>
                         <table class="outputs-table">
-                            <thead><tr><th>Path</th><th>Scenario Outcome</th><th>Advised Lay</th><th>Lay Stake</th><th>Liability</th><th>Net P&L Return</th><th>Status</th></tr></thead>
+                            <thead>
+                                <tr>
+                                    <th>Event Path</th>
+                                    <th>Scenario Outcome</th>
+                                    <th>Advised Lay</th>
+                                    <th>Used Stake</th>
+                                    <th>Liability Hit</th>
+                                    <th>Net P&L Return</th>
+                                </tr>
+                            </thead>
                             <tbody id="results_${inst.id}"></tbody>
                         </table>
                     </div>
                 </div>
             `;
             root.appendChild(card);
-            card.querySelectorAll('textarea').forEach(autoGrow);
+            
+            // Re-trigger autoGrow on textareas inside the newly appended card
+            card.querySelectorAll('textarea').forEach(el => {
+                autoGrow(el);
+            });
+            
+            // Initial calculation pass for the newly rendered instance
             calculateInstance(inst.id);
         });
     }
 
+    // Initialize application on load
     createNewAcca();
 </script>
 </body>
