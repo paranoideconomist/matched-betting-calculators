@@ -258,11 +258,11 @@
             title: `Accumulator Session #${id + 1}`,
             betType: "normal",
             underlayBias: 100,
-            backStake: 10,
-            backOdds: 5.0,
+            backStake: "",
+            backOdds: "",
             legs: [
-                { name: "Leg 1", odds: 6.0, commission: 2, actualLay: "", notes: "", completed: false },
-                { name: "Leg 2", odds: 10.0, commission: 2, actualLay: "", notes: "", completed: false }
+                { name: "Leg 1", odds: "", commission: 0, actualLay: "", notes: "", completed: false },
+                { name: "Leg 2", odds: "", commission: 0, actualLay: "", notes: "", completed: false }
             ]
         });
         renderWorkspace();
@@ -276,7 +276,7 @@
     function addLegToInstance(id) {
         const inst = accaInstances.find(item => item.id === id);
         if (inst && inst.legs.length < 8) {
-            inst.legs.push({ name: "", odds: "", commission: 2, actualLay: "", notes: "", completed: false });
+            inst.legs.push({ name: "", odds: "", commission: 0, actualLay: "", notes: "", completed: false });
             renderWorkspace();
         }
     }
