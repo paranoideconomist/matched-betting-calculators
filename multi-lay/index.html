@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Multi-Lay Bias & SNR Calculator</title>
+    <!-- Premium Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-main: #f8fafc;
+            --card-bg: #ffffff;
+            --border: #e2e8f0;
+            --border-hover: #cbd5e1;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --primary: #0284c7;
+            --primary-hover: #0369a1;
+            --primary-light: #f0f9ff;
+            --success: #16a34a;
+            --success-bg: #f0fdf4;
+            --success-border: #bbf7d0;
+            --danger: #dc2626;
+            --danger-bg: #fef2f2;
+            --danger-border: #fecaca;
+            --accent: #f8fafc;
+            --override-bg: #fffbf7;
+            --override-border: #fed7aa;
+            --override-text: #ea580c;
+            --font-sans: 'Plus Jakarta Sans', -apple-system, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.04), 0 4px 6px -4px rgb(0 0 0 / 0.04);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            padding: 24px 16px;
+            line-height: 1.5;
+        }
+
+        .workspace-header {
+            max-width: 1100px;
+            margin: 0 auto 24px auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            background: var(--card-bg);
+            padding: 20px 28px;
+            border-radius: 16px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+        }
+
+        @media (min-width: 640px) {
+            .workspace-header {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+        }
+
+        .workspace-header h1 { 
+            margin: 0; 
+            font-size: 1.5rem; 
+            font-weight: 800;
+            color: var(--text-main); 
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: -0.025em;
+        }
+
+        .workspace-header h1 span.brand-sequential {
+            color: var(--primary);
+        }
+
+        .acca-card {
+            max-width: 1100px;
+            margin: 0 auto 28px auto;
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            transition: box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+
+        .acca-card:hover {
+            box-shadow: var(--shadow-lg);
+            border-color: var(--border-hover);
+        }
+
+        .acca-body { padding: 24px; }
+
+        .config-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 28px;
+            align-items: stretch;
+        }
+
+        .config-section {
+            background: var(--bg-main);
+            border: 1px solid var(--border);
+            padding: 18px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .config-section h3 {
+            font-size: 0.9rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 6px;
+            margin-bottom: 4px;
+        }
+
+        .global-slider-box {
+            background: #f0fdfa;
+            border: 1px solid #ccfbf1;
+        }
+
+        .global-slider-box h3 {
+            color: #0f766e;
+            border-bottom: 1px solid #ccfbf1;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        label {
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .global-slider-box label {
+            color: #115e59;
+        }
+
+        input, select {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            background: #fff;
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            transition: all 0.15s ease;
+            width: 100%;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12);
+        }
+
+        /* Customized Sizing Range Slider */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: #cbd5e1;
+            height: 6px;
+            border-radius: 9999px;
+            padding: 0;
+            border: none;
+            cursor: pointer;
+            margin: 6px 0;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            background: var(--primary);
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            transition: transform 0.1s ease;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+        }
+
+        .global-slider-box input[type="range"]::-webkit-slider-thumb {
+            background: #0d9488;
+        }
+
+        .legs-section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+        }
+
+        .legs-section-header h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .leg-row {
+            background: #ffffff;
+            padding: 18px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border);
+            border-left: 5px solid var(--primary);
+            box-shadow: var(--shadow-sm);
+            transition: all 0.15s ease;
+        }
+
+        .leg-row:hover {
+            border-color: var(--border-hover);
+            box-shadow: var(--shadow-md);
+        }
+
+        .leg-inputs {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            align-items: end;
+        }
+
+        @media (min-width: 768px) {
+            .leg-inputs {
+                grid-template-columns: 2fr 1fr 2.5fr auto;
+            }
+        }
+
+        /* Buttons Styling */
+        .btn {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.15s ease;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .btn-primary { 
+            background: var(--primary); 
+            color: white; 
+        }
+        
+        .btn-primary:hover { 
+            background: var(--primary-hover); 
+            transform: translateY(-1px);
+        }
+
+        .btn-danger { 
+            background: var(--danger); 
+            color: white; 
+        }
+        
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+
+        .btn-secondary { 
+            background: #f1f5f9; 
+            color: #475569; 
+            box-shadow: none;
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+            color: var(--text-main);
+        }
+
+        .btn-disabled {
+            background: #cbd5e1;
+            color: #94a3b8;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* Table and Outputs layout */
+        .outputs-section { 
+            background: #ffffff; 
+            border: 1px solid var(--border); 
+            border-radius: 12px; 
+            padding: 24px; 
+            box-shadow: var(--shadow-sm);
+            margin-top: 24px;
+        }
+        
+        .outputs-section h4 { 
+            margin-top: 0; 
+            margin-bottom: 16px; 
+            color: var(--text-main); 
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .outputs-table-wrapper {
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .outputs-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            font-size: 0.9rem; 
+            min-width: 750px;
+        }
+        
+        .outputs-table th, .outputs-table td { 
+            padding: 14px 16px; 
+            text-align: left; 
+            border-bottom: 1px solid var(--border); 
+        }
+        
+        .outputs-table th { 
+            background: #f8fafc; 
+            font-weight: 700; 
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .win-cell { 
+            background-color: var(--success-bg); 
+            color: var(--success); 
+            font-weight: 700; 
+            border-left: 4px solid var(--success);
+        }
+
+        .loss-cell { 
+            background-color: var(--danger-bg); 
+            color: var(--danger); 
+            font-weight: 700; 
+            border-left: 4px solid var(--danger);
+        }
+
+        /* Badges for scenario description column */
+        .badge-container {
+            display: inline-flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .badge-segment {
+            font-family: var(--font-sans);
+            font-weight: 800;
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 6px;
+            text-shadow: 0 1px 0px rgba(255,255,255,0.4);
+            box-shadow: inset 0 -1px 0px rgba(0,0,0,0.1);
+            text-transform: uppercase;
+        }
+
+        .badge-segment.badge-win {
+            background-color: #dcfce7;
+            color: #15803d;
+            border: 1px solid #bbf7d0;
+        }
+
+        .badge-segment.badge-loss {
+            background-color: #fee2e2;
+            color: #b91c1c;
+            border: 1px solid #fecaca;
+        }
+
+        .badge-segment.badge-info {
+            background-color: #f0f9ff;
+            color: #0369a1;
+            border: 1px solid #bae6fd;
+        }
+
+        /* Max Exposure Summary Banner */
+        .summary-banner {
+            background: var(--override-bg);
+            border: 1px solid var(--override-border);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-top: 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            color: var(--override-text);
+        }
+
+        .summary-banner .material-icons {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .summary-banner h5 {
+            font-size: 0.95rem;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .summary-banner p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        .workspace-footer {
+            max-width: 1100px;
+            margin: 0 auto;
+            text-align: center;
+            padding: 24px 0;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Main Header Space -->
+<div class="workspace-header">
+    <h1>
+        <span class="material-icons" style="color:var(--primary); font-size:1.8rem;">calculate</span> 
+        Multi-Lay <span class="brand-sequential">Advanced</span> Calculator
+    </h1>
+    <button id="addLegBtn" class="btn btn-primary" onclick="addLeg()">
+        <span class="material-icons" style="font-size:1.2rem;">add_circle_outline</span> Add Selection Leg
+    </button>
+</div>
+
+<!-- Main Interactive Workspace -->
+<div class="acca-card">
+    <div class="acca-body">
+        
+        <!-- Global Controls Matrix -->
+        <div class="config-bar">
+            <!-- Back Bet Details Panel -->
+            <div class="config-section">
+                <h3>Back Bet Profile</h3>
+                <div class="input-group">
+                    <label>Bet Style Profile</label>
+                    <select id="betType" onchange="calculate()">
+                        <option value="normal">Normal (Qualifying Bet)</option>
+                        <option value="snr">Free Bet (SNR - Stake Not Returned)</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Back Stake (£)</label>
+                    <input type="number" id="backStake" value="10.00" step="0.50" oninput="calculate()">
+                </div>
+                <div class="input-group">
+                    <label>Total Back Odds</label>
+                    <input type="number" id="backOdds" value="6.00" step="0.10" oninput="calculate()">
+                </div>
+            </div>
+
+            <!-- Exchange Settings Panel -->
+            <div class="config-section">
+                <h3>Exchange Settings</h3>
+                <div class="input-group">
+                    <label>Exchange Commission (%)</label>
+                    <input type="number" id="commission" value="0" step="0.1" oninput="calculate()">
+                </div>
+            </div>
+
+            <!-- Global Sizing Slider Panel -->
+            <div class="config-section global-slider-box">
+                <h3 style="display:flex; justify-content:space-between;">
+                    <span>Global Scaling</span>
+                    <span style="font-weight:800; color:#0d9488;"><span id="globalSizingLabel">100</span>%</span>
+                </h3>
+                <div class="input-group">
+                    <label>Shared Lay Multiplier</label>
+                    <input type="range" id="globalSizingSlider" min="0" max="150" value="100" oninput="updateGlobalSizingLabel()">
+                    <p style="font-size: 0.75rem; color: #0f766e; margin-top: 8px; line-height: 1.35; font-weight: 500;">
+                        Scales <strong>all lay stakes simultaneously</strong>. Setting to 0% models running the bookie bet unhedged.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Legs Adjuster Section Header -->
+        <div class="legs-section-header">
+            <h3>Individual Leg Weights</h3>
+        </div>
+
+        <!-- JS populates leg components dynamically inside this wrapper -->
+        <div id="legsContainer"></div>
+
+        <!-- Live Calculations Table -->
+        <div class="outputs-section">
+            <h4>
+                <span class="material-icons" style="color:var(--primary); font-size:1.3rem;">alt_route</span>
+                Live Settlement Calculations
+            </h4>
+            <div class="outputs-table-wrapper">
+                <table class="outputs-table">
+                    <thead>
+                        <tr>
+                            <th>Outcome Scenario Condition</th>
+                            <th>Calculated Lay Stake</th>
+                            <th>Exchange Liability</th>
+                            <th>Net P&L Result</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsBody">
+                        <!-- Content rendered by calculate() -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Max Effective Exposure Banner -->
+            <div class="summary-banner" id="maxLiabilityBox">
+                <span class="material-icons">info</span>
+                <div>
+                    <h5>Max Effective Exchange Exposure: £0.00</h5>
+                    <p>Since outcomes are mutually exclusive, your exchange only needs to hold liability for the largest single threat.</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="workspace-footer">
+    Multi-Lay Advanced Calculator &copy; 2026. Custom Built For Precision Matched Betting.
+</div>
+
+<script>
+    // State management array
+    let activeLegs = [
+        { id: 0, label: "1-1 Scoreline", odds: 6.50, bias: 100 },
+        { id: 1, label: "2-2 Scoreline", odds: 12.00, bias: 100 },
+        { id: 2, label: "1-0 Scoreline", odds: 7.00, bias: 100 }
+    ];
+    let nextId = 3;
+
+    function updateGlobalSizingLabel() {
+        const val = document.getElementById('globalSizingSlider').value;
+        document.getElementById('globalSizingLabel').innerText = val;
+        calculate();
+    }
+
+    function renderLegs() {
+        const container = document.getElementById('legsContainer');
+        container.innerHTML = '';
+
+        activeLegs.forEach((leg, index) => {
+            const row = document.createElement('div');
+            row.className = 'leg-row';
+            row.innerHTML = `
+                <div class="leg-inputs">
+                    <div class="input-group">
+                        <label>Leg ${index + 1} Selection Name</label>
+                        <input type="text" id="legName_${leg.id}" value="${leg.label}" oninput="syncState(${leg.id})">
+                    </div>
+                    <div class="input-group">
+                        <label>Lay Odds</label>
+                        <input type="number" id="legOdds_${leg.id}" value="${leg.odds.toFixed(2)}" step="0.1" oninput="syncState(${leg.id})">
+                    </div>
+                    <div class="input-group">
+                        <label style="display:flex; justify-content:space-between;">
+                            <span>Leg Weight / Bias</span>
+                            <span style="font-weight:800; color:var(--primary);"><span id="biasVal_${leg.id}">${leg.bias}</span>%</span>
+                        </label>
+                        <input type="range" id="legBias_${leg.id}" min="0" max="150" value="${leg.bias}" oninput="syncSlider(${leg.id})">
+                    </div>
+                    <div>
+                        <button class="btn btn-secondary" onclick="removeLeg(${leg.id})" ${activeLegs.length <= 2 ? 'disabled style="opacity:0.25; cursor:not-allowed;"' : ''}>
+                            <span class="material-icons" style="font-size: 1rem;">close</span> Remove
+                        </button>
+                    </div>
+                </div>
+            `;
+            container.appendChild(row);
+        });
+
+        // Toggle state of selection adding button based on 4-leg constraint
+        const addBtn = document.getElementById('addLegBtn');
+        if (activeLegs.length >= 4) {
+            addBtn.className = "btn btn-disabled";
+            addBtn.disabled = true;
+        } else {
+            addBtn.className = "btn btn-primary";
+            addBtn.disabled = false;
+        }
+    }
+
+    function syncState(id) {
+        const leg = activeLegs.find(l => l.id === id);
+        if (leg) {
+            leg.label = document.getElementById(`legName_${id}`).value;
+            leg.odds = parseFloat(document.getElementById(`legOdds_${id}`).value) || 0;
+        }
+        calculate();
+    }
+
+    function syncSlider(id) {
+        const leg = activeLegs.find(l => l.id === id);
+        if (leg) {
+            const val = document.getElementById(`legBias_${id}`).value;
+            document.getElementById(`biasVal_${id}`).innerText = val;
+            leg.bias = parseInt(val);
+        }
+        calculate();
+    }
+
+    function addLeg() {
+        if (activeLegs.length < 4) {
+            activeLegs.push({
+                id: nextId,
+                label: `Selection ${nextId + 1}`,
+                odds: 5.00,
+                bias: 100
+            });
+            nextId++;
+            renderLegs();
+            calculate();
+        }
+    }
+
+    function removeLeg(id) {
+        if (activeLegs.length > 2) {
+            activeLegs = activeLegs.filter(l => l.id !== id);
+            renderLegs();
+            calculate();
+        }
+    }
+
+    function calculate() {
+        const betType = document.getElementById('betType').value;
+        const backStake = parseFloat(document.getElementById('backStake').value) || 0;
+        const backOdds = parseFloat(document.getElementById('backOdds').value) || 0;
+        const comm = (parseFloat(document.getElementById('commission').value) || 0) / 100;
+        const globalMultiplier = (parseInt(document.getElementById('globalSizingSlider').value) || 0) / 100;
+        
+        // SNR Adjustments: free bet returns do not return the stake element
+        const totalReturn = (betType === 'snr') ? (backStake * (backOdds - 1)) : (backStake * backOdds);
+        const netBackCost = (betType === 'snr') ? 0 : backStake; // Free bet has £0 out-of-pocket real money risk
+
+        let totalLayStakesCollected = 0;
+        let runningLegsData = [];
+
+        // Apply compounding sliders (Individual Bias * Global Multiplier)
+        activeLegs.forEach(leg => {
+            const individualBiasFactor = leg.bias / 100;
+            let layStake = 0;
+            
+            if (leg.odds > 1) {
+                // Base formula adjusted by asymmetric bias, global layout slider, and SNR adjustments
+                layStake = (totalReturn / (leg.odds - comm)) * individualBiasFactor * globalMultiplier;
+            }
+            
+            const liability = layStake * (leg.odds - 1);
+            totalLayStakesCollected += layStake;
+
+            runningLegsData.push({
+                name: leg.label || `Leg ID ${leg.id}`,
+                layStake: layStake,
+                liability: liability
+            });
+        });
+
+        const netCommMultiplier = (1 - comm);
+        let html = '';
+        let maxLiability = 0;
+
+        // Condition A: Alternate outcome finishes match
+        const backLosesPl = (totalLayStakesCollected * netCommMultiplier) - netBackCost;
+        const displayBackLosesPl = Math.abs(backLosesPl) < 0.01 ? 0 : backLosesPl;
+        const backLosesClass = displayBackLosesPl >= 0 ? 'win-cell' : 'loss-cell';
+
+        html += `<tr>
+            <td>
+                <div class="badge-container">
+                    <span class="badge-segment badge-info">LAY WINS</span>
+                </div>
+                <strong style="margin-left: 8px;">Back Bet Loses / Alternate Outcome Hits</strong>
+            </td>
+            <td style="font-family: var(--font-mono); font-weight: 700;">-</td>
+            <td style="font-family: var(--font-mono); font-weight: 700;">-</td>
+            <td class="${backLosesClass}" style="font-family: var(--font-mono);">£${displayBackLosesPl.toFixed(2)}</td>
+        </tr>`;
+
+        // Condition B+: Cross-checking winning scenarios
+        runningLegsData.forEach((currentLeg, index) => {
+            let otherLaysWon = 0;
+            runningLegsData.forEach((otherLeg, oIdx) => {
+                if (index !== oIdx) {
+                    otherLaysWon += otherLeg.layStake;
+                }
+            });
+
+            // Net returns factoring whether user paid out-of-pocket cash stake initially
+            const totalProfit = totalReturn - netBackCost + (otherLaysWon * netCommMultiplier);
+            const netPL = totalProfit - currentLeg.liability;
+            const displayNetPL = Math.abs(netPL) < 0.01 ? 0 : netPL;
+            
+            if (currentLeg.liability > maxLiability) {
+                maxLiability = currentLeg.liability;
+            }
+
+            const cellClass = displayNetPL >= 0 ? 'win-cell' : 'loss-cell';
+
+            html += `<tr>
+                <td>
+                    <div class="badge-container">
+                        <span class="badge-segment badge-win">BACK WINS</span>
+                    </div>
+                    <span style="margin-left: 8px;">If <strong>${currentLeg.name}</strong> hits</span>
+                </td>
+                <td style="font-family: var(--font-mono); font-weight: 700; color: var(--primary);">£${currentLeg.layStake.toFixed(2)}</td>
+                <td style="font-family: var(--font-mono); font-weight: 700; color: #dc2626;">£${currentLeg.liability.toFixed(2)}</td>
+                <td class="${cellClass}" style="font-family: var(--font-mono);">£${displayNetPL.toFixed(2)}</td>
+            </tr>`;
+        });
+
+        document.getElementById('resultsBody').innerHTML = html;
+        document.getElementById('maxLiabilityBox').innerHTML = `
+            <span class="material-icons">info</span>
+            <div>
+                <h5>Max Effective Exchange Exposure: £${maxLiability.toFixed(2)}</h5>
+                <p>Since outcomes are mutually exclusive, your exchange only needs to hold liability for the largest single threat (your liabilities do not compound because only one of these scores can win the game).</p>
+            </div>
+        `;
+    }
+
+    // Initialize layout drawing
+    renderLegs();
+    calculate();
+</script>
+
+</body>
+</html>
