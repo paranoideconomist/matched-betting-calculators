@@ -26,29 +26,30 @@
             --disabled: #e2e8f0;
         }
 
+        /* Desktop Optimization: tighter paddings and margins for single-screen view */
         body { 
             font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; 
             background-color: var(--bg-main); 
             color: var(--text-main); 
             margin: 0; 
-            padding: 20px; 
+            padding: 10px; 
         }
 
         .workspace-header {
             max-width: 1400px;
-            margin: 0 auto 20px auto;
+            margin: 0 auto 10px auto;
             display: flex;
             justify-content: space-between;
             align-items: center;
             background: var(--card-bg);
-            padding: 15px 25px;
+            padding: 10px 20px;
             border-radius: 10px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
 
         .workspace-header h1 { 
             margin: 0; 
-            font-size: 1.5rem; 
+            font-size: 1.4rem; 
             color: var(--text-main); 
             font-weight: 800; 
             letter-spacing: -0.02em; 
@@ -56,7 +57,7 @@
 
         .acca-card {
             max-width: 1400px;
-            margin: 0 auto 25px auto;
+            margin: 0 auto 15px auto;
             background: var(--card-bg);
             border-radius: 12px;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
@@ -66,41 +67,41 @@
 
         .acca-header { 
             background: var(--accent); 
-            padding: 15px 20px; 
+            padding: 10px 15px; 
             border-bottom: 1px solid var(--border); 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
         }
         
-        .acca-body { padding: 20px; }
+        .acca-body { padding: 15px; }
         
         .config-bar { 
             display: grid; 
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
-            gap: 15px; 
+            gap: 10px; 
             background: var(--accent); 
             border: 1px solid var(--border); 
-            padding: 15px; 
+            padding: 10px; 
             border-radius: 8px; 
-            margin-bottom: 20px; 
+            margin-bottom: 15px; 
         }
 
         label {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: 700;
             color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.05em;
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 4px;
         }
 
         input, select, textarea {
-            padding: 8px 10px;
+            padding: 6px 8px;
             border: 1px solid var(--border);
             border-radius: 6px;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             background: #f8fafc;
             color: var(--text-main);
             font-family: inherit;
@@ -119,7 +120,8 @@
         textarea {
             resize: none;
             overflow: hidden;
-            min-height: 38px;
+            min-height: 30px;
+            height: 30px;
         }
 
         .title-input {
@@ -127,12 +129,12 @@
             font-weight: 700;
             border: none;
             background: transparent;
-            padding: 5px;
+            padding: 4px;
             max-width: 300px;
         }
 
         .btn {
-            padding: 8px 16px;
+            padding: 6px 12px;
             border: none;
             border-radius: 6px;
             font-weight: 600;
@@ -149,13 +151,13 @@
         .leg-row { 
             display: grid; 
             grid-template-columns: 40px 1.8fr 0.8fr 0.8fr 1.0fr 2.2fr 60px 1fr 40px; 
-            gap: 10px; 
+            gap: 8px; 
             align-items: center; 
             background: #f8fafc; 
             border: 1px solid var(--border); 
-            padding: 10px; 
+            padding: 8px; 
             border-radius: 8px; 
-            margin-bottom: 10px; 
+            margin-bottom: 8px; 
             transition: all 0.2s ease; 
         }
 
@@ -230,6 +232,100 @@
             font-weight: 700;
             color: var(--text-muted);
             text-transform: uppercase;
+        }
+
+        .done-checkbox {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            accent-color: var(--success);
+            margin: 0 auto;
+            display: block;
+        }
+
+        .leg-done {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        .outputs-table-wrapper {
+            overflow-x: auto;
+            width: 100%;
+        }
+
+        /* Mobile Optimization: explicit touch sizes and distinct stacked layout */
+        @media (max-width: 850px) {
+            input, select, textarea {
+                padding: 10px;
+                font-size: 16px; /* 16px explicitly prevents iOS input zoom */
+            }
+            
+            textarea {
+                min-height: 40px;
+                height: 40px;
+            }
+            
+            .btn {
+                padding: 10px 16px;
+                font-size: 1rem;
+            }
+
+            .workspace-header { flex-direction: column; align-items: stretch; gap: 15px; }
+            .acca-header { flex-direction: column; align-items: stretch; gap: 15px; }
+            .title-input { max-width: 100%; }
+            
+            .leg-header-row { display: none; }
+            
+            .leg-row {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                padding: 40px 15px 15px 15px;
+                position: relative;
+            }
+            
+            .leg-num { position: absolute; top: 12px; left: 15px; }
+            .close-btn { position: absolute; top: 12px; right: 15px; }
+            
+            .advised-display { 
+                text-align: left !important; 
+                padding: 10px; 
+                background: var(--success-bg); 
+                border-radius: 6px; 
+            }
+            .advised-display::before { 
+                content: "Advised Lay: "; 
+                color: var(--text-muted); 
+                font-size: 0.8rem; 
+                font-weight: 700; 
+                text-transform: uppercase; 
+            }
+            
+            .leg-done { 
+                flex-direction: row; 
+                justify-content: space-between; 
+                background: var(--border); 
+                padding: 10px; 
+                border-radius: 6px; 
+                width: 100%; 
+                box-sizing: border-box; 
+            }
+            .leg-done::before { 
+                content: "Mark Leg as Done:"; 
+                font-weight: 700; 
+                color: var(--text-main); 
+                font-size: 0.85rem; 
+            }
+            
+            .leg-row > textarea, .leg-row > input, .actual-lay-group { 
+                width: 100%; 
+                box-sizing: border-box; 
+            }
+            
+            .outputs-table { min-width: 600px; }
         }
     </style>
 </head>
@@ -363,7 +459,7 @@
                 inputEl.value = actualUsed.toFixed(2);
             }
             if (sliderEl) {
-                const calculatedMax = Math.max(advised * 2, actualUsed * 1.1, 10);
+                const calculatedMax = Math.max(advised * 2, 0.01);
                 sliderEl.max = calculatedMax.toFixed(2);
                 if (document.activeElement !== sliderEl) {
                     sliderEl.value = actualUsed.toFixed(2);
@@ -433,7 +529,7 @@
                 legsHtml += `
                     <div class="leg-row ${leg.completed ? 'completed' : ''}" id="leg_row_${inst.id}_${index}">
                         <div class="leg-num">#${index + 1}</div>
-                        <textarea placeholder="Event" oninput="updateField(${inst.id}, 'name', this.value, ${index}); autoGrow(this)">${leg.name}</textarea>
+                        <textarea rows="1" placeholder="Event" oninput="updateField(${inst.id}, 'name', this.value, ${index}); autoGrow(this)">${leg.name}</textarea>
                         <input type="number" value="${leg.odds}" step="0.05" placeholder="Odds" oninput="updateField(${inst.id}, 'odds', this.value, ${index})">
                         <input type="number" value="${leg.commission}" step="0.5" placeholder="0" oninput="updateField(${inst.id}, 'commission', this.value, ${index})">
                         <div class="advised-display" id="advised_${inst.id}_${index}">£0.00</div>
@@ -441,11 +537,11 @@
                             <input type="number" id="override_${inst.id}_${index}" class="override-input" value="${leg.actualLay || ''}" placeholder="£0.00" step="0.01" oninput="updateField(${inst.id}, 'actualLay', this.value, ${index})">
                             <input type="range" id="slider_${inst.id}_${index}" class="lay-slider" min="0" max="100" step="0.01" value="${leg.actualLay || 0}" oninput="updateField(${inst.id}, 'actualLay', this.value, ${index}); document.getElementById('override_${inst.id}_${index}').value = this.value">
                         </div>
-                        <div style="text-align:center;">
-                            <input type="checkbox" title="Mark as complete" ${leg.completed ? 'checked' : ''} onchange="updateField(${inst.id}, 'completed', this.checked, ${index})">
+                        <div class="leg-done">
+                            <input type="checkbox" class="done-checkbox" title="Mark as complete" ${leg.completed ? 'checked' : ''} onchange="updateField(${inst.id}, 'completed', this.checked, ${index})">
                         </div>
-                        <textarea class="notes-input" placeholder="Notes" oninput="updateField(${inst.id}, 'notes', this.value, ${index}); autoGrow(this)">${leg.notes}</textarea>
-                        <button class="btn-secondary" style="border-radius:50%; width:28px; height:28px; padding:0; border:none; cursor:pointer;" onclick="removeLegFromInstance(${inst.id}, ${index})" ${inst.legs.length <= 2 ? 'disabled style="opacity:0.2;"' : ''}>×</button>
+                        <textarea rows="1" class="notes-input" placeholder="Notes" oninput="updateField(${inst.id}, 'notes', this.value, ${index}); autoGrow(this)">${leg.notes}</textarea>
+                        <button class="btn-secondary close-btn" style="border-radius:50%; width:28px; height:28px; padding:0; border:none; cursor:pointer;" onclick="removeLegFromInstance(${inst.id}, ${index})" ${inst.legs.length <= 2 ? 'disabled style="opacity:0.2;"' : ''}>×</button>
                     </div>
                 `;
             });
@@ -503,20 +599,22 @@
                     </div>
                     
                     <div class="outputs-section" style="margin-top: 25px;">
-                        <h4 style="margin:0; color:var(--text-main); font-size: 1.1rem; font-weight: 700;">Leg-by-Leg Profit Outcomes</h4>
-                        <table class="outputs-table">
-                            <thead>
-                                <tr>
-                                    <th>Event Path</th>
-                                    <th>Scenario Outcome</th>
-                                    <th>Advised Lay</th>
-                                    <th>Used Stake</th>
-                                    <th>Liability Hit</th>
-                                    <th>Net P&L Return</th>
-                                </tr>
-                            </thead>
-                            <tbody id="results_${inst.id}"></tbody>
-                        </table>
+                        <h4 style="margin:0; color:var(--text-main); font-size: 1.1rem; font-weight: 700; margin-bottom: 15px;">Leg-by-Leg Profit Outcomes</h4>
+                        <div class="outputs-table-wrapper">
+                            <table class="outputs-table">
+                                <thead>
+                                    <tr>
+                                        <th>Event Path</th>
+                                        <th>Scenario Outcome</th>
+                                        <th>Advised Lay</th>
+                                        <th>Used Stake</th>
+                                        <th>Liability Hit</th>
+                                        <th>Net P&L Return</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="results_${inst.id}"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             `;
