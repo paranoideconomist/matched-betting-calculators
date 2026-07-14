@@ -320,9 +320,19 @@
                 font-size: 0.85rem; 
             }
             
-            .leg-row > textarea, .leg-row > input, .actual-lay-group { 
+            .input-wrap, .actual-lay-group { 
                 width: 100%; 
                 box-sizing: border-box; 
+            }
+
+            .input-wrap::before, .actual-lay-group::before {
+                content: attr(data-label);
+                display: block;
+                font-size: 0.8rem;
+                font-weight: 700;
+                color: var(--text-muted);
+                text-transform: uppercase;
+                margin-bottom: 4px;
             }
             
             .outputs-table { min-width: 600px; }
@@ -529,18 +539,26 @@
                 legsHtml += `
                     <div class="leg-row ${leg.completed ? 'completed' : ''}" id="leg_row_${inst.id}_${index}">
                         <div class="leg-num">#${index + 1}</div>
-                        <textarea rows="1" placeholder="Event" oninput="updateField(${inst.id}, 'name', this.value, ${index}); autoGrow(this)">${leg.name}</textarea>
-                        <input type="number" value="${leg.odds}" step="0.05" placeholder="Odds" oninput="updateField(${inst.id}, 'odds', this.value, ${index})">
-                        <input type="number" value="${leg.commission}" step="0.5" placeholder="0" oninput="updateField(${inst.id}, 'commission', this.value, ${index})">
+                        <div class="input-wrap" data-label="Event / Selection">
+                            <textarea rows="1" placeholder="Event" oninput="updateField(${inst.id}, 'name', this.value, ${index}); autoGrow(this)">${leg.name}</textarea>
+                        </div>
+                        <div class="input-wrap" data-label="Lay Odds">
+                            <input type="number" value="${leg.odds}" step="0.05" placeholder="Odds" oninput="updateField(${inst.id}, 'odds', this.value, ${index})">
+                        </div>
+                        <div class="input-wrap" data-label="Comm %">
+                            <input type="number" value="${leg.commission}" step="0.5" placeholder="0" oninput="updateField(${inst.id}, 'commission', this.value, ${index})">
+                        </div>
                         <div class="advised-display" id="advised_${inst.id}_${index}">£0.00</div>
-                        <div class="actual-lay-group">
+                        <div class="actual-lay-group" data-label="Actual Lay Stake">
                             <input type="number" id="override_${inst.id}_${index}" class="override-input" value="${leg.actualLay || ''}" placeholder="£0.00" step="0.01" oninput="updateField(${inst.id}, 'actualLay', this.value, ${index})">
                             <input type="range" id="slider_${inst.id}_${index}" class="lay-slider" min="0" max="100" step="0.01" value="${leg.actualLay || 0}" oninput="updateField(${inst.id}, 'actualLay', this.value, ${index}); document.getElementById('override_${inst.id}_${index}').value = this.value">
                         </div>
                         <div class="leg-done">
                             <input type="checkbox" class="done-checkbox" title="Mark as complete" ${leg.completed ? 'checked' : ''} onchange="updateField(${inst.id}, 'completed', this.checked, ${index})">
                         </div>
-                        <textarea rows="1" class="notes-input" placeholder="Notes" oninput="updateField(${inst.id}, 'notes', this.value, ${index}); autoGrow(this)">${leg.notes}</textarea>
+                        <div class="input-wrap" data-label="Notes">
+                            <textarea rows="1" class="notes-input" placeholder="Notes" oninput="updateField(${inst.id}, 'notes', this.value, ${index}); autoGrow(this)">${leg.notes}</textarea>
+                        </div>
                         <button class="btn-secondary close-btn" style="border-radius:50%; width:28px; height:28px; padding:0; border:none; cursor:pointer;" onclick="removeLegFromInstance(${inst.id}, ${index})" ${inst.legs.length <= 2 ? 'disabled style="opacity:0.2;"' : ''}>×</button>
                     </div>
                 `;
