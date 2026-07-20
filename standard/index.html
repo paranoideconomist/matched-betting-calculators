@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luke's Pro MB Calculator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* Deep, modern dark mode palette */
+            --bg-main: #09090b;       
+            --card-bg: #18181b;       
+            --accent: #09090b;        
+            --border: #27272a;        
+            --border-hover: #3f3f46;  
+            
+            /* Typography */
+            --text-main: #f4f4f5;     
+            --text-muted: #a1a1aa;    
+            
+            /* Brand & Accents */
+            --primary: #3b82f6;       /* Back Bet Blue */
+            --primary-glow: rgba(59, 130, 246, 0.4);
+            --lay-color: #e11d48;     /* Lay Bet Pink/Red */
+            --lay-glow: rgba(225, 29, 72, 0.4);
+            
+            /* Status Colors */
+            --success: #10b981;       
+            --success-bg: rgba(16, 185, 129, 0.1);
+            --danger: #ef4444;        
+            --danger-bg: rgba(239, 68, 68, 0.1);
+            
+            --override-border: rgba(245, 158, 11, 0.5);
+            --override-bg: rgba(245, 158, 11, 0.05);
+            --override-text: #f59e0b; 
+        }
+
+        body { 
+            font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; 
+            background-color: var(--bg-main); 
+            color: var(--text-main); 
+            margin: 0; 
+            padding: 20px 10px; 
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .workspace-header {
+            max-width: 1200px;
+            margin: 0 auto 20px auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(145deg, var(--card-bg), var(--bg-main));
+            padding: 16px 24px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            border-top: 1px solid #3f3f46;
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+        }
+
+        .workspace-header h1 { 
+            margin: 0; 
+            font-size: 1.5rem; 
+            color: #ffffff; 
+            font-weight: 800; 
+            letter-spacing: -0.03em; 
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .workspace-header h1::before {
+            content: '';
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            background: var(--success);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--success-bg);
+        }
+
+        .calc-card {
+            max-width: 1200px;
+            margin: 0 auto 25px auto;
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7);
+            border: 1px solid var(--border);
+            border-top: 1px solid #3f3f46;
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .calc-header { 
+            background: var(--accent); 
+            padding: 12px 20px; 
+            border-bottom: 1px solid var(--border); 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        
+        .calc-body { padding: 25px; }
+
+        .type-selector {
+            background: var(--accent);
+            border: 1px solid var(--border);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .split-panels {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        .input-panel {
+            background: var(--accent);
+            border: 1px solid var(--border);
+            padding: 20px;
+            border-radius: 12px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .input-panel.back-side {
+            border-top: 3px solid var(--primary);
+            box-shadow: inset 0 20px 40px -20px var(--primary-glow);
+        }
+
+        .input-panel.lay-side {
+            border-top: 3px solid var(--lay-color);
+            box-shadow: inset 0 20px 40px -20px var(--lay-glow);
+        }
+
+        .panel-title {
+            grid-column: 1 / -1;
+            font-size: 1.1rem;
+            font-weight: 800;
+            margin: 0 0 5px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-side .panel-title { color: var(--primary); }
+        .lay-side .panel-title { color: var(--lay-color); }
+
+        .full-width { grid-column: 1 / -1; }
+
+        label {
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        input, select {
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            background: var(--bg-main);
+            color: var(--text-main);
+            font-family: 'JetBrains Mono', monospace;
+            box-sizing: border-box;
+            width: 100%;
+            transition: all 0.2s ease;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        select { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: var(--bg-main);
+            box-shadow: 0 0 0 2px var(--primary-glow), inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .lay-side input:focus {
+            border-color: var(--lay-color);
+            box-shadow: 0 0 0 2px var(--lay-glow), inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        input[type="number"]::-webkit-inner-spin-button, 
+        input[type="number"]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+
+        .title-input {
+            font-size: 1.2rem;
+            font-weight: 800;
+            border: none;
+            background: transparent;
+            padding: 4px 8px;
+            max-width: 300px;
+            box-shadow: none;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: var(--text-main);
+        }
+        
+        .title-input:focus {
+            background: var(--bg-main);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-primary { 
+            background: linear-gradient(135deg, var(--success), #059669); 
+            color: white; 
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(16, 185, 129, 0.6); }
+
+        .btn-danger { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
+        .btn-danger:hover { background: var(--danger-bg); }
+
+        /* Summary / Target Panel */
+        .summary-panel {
+            background: rgba(16, 185, 129, 0.05);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            padding: 20px;
+            border-radius: 12px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1.5fr;
+            gap: 20px;
+            margin-bottom: 25px;
+            align-items: center;
+        }
+
+        .big-display {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .big-display label { margin: 0; color: var(--success); }
+        .big-display .value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--text-main);
+            text-shadow: 0 0 20px rgba(255,255,255,0.1);
+        }
+        .big-display .value.liab { color: var(--danger); text-shadow: 0 0 20px rgba(239, 68, 68, 0.3); }
+
+        .strategy-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: var(--bg-main);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .strategy-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-strat {
+            flex: 1;
+            padding: 6px;
+            font-size: 0.75rem;
+            background: var(--accent);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 800;
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+        .btn-strat:hover, .btn-strat.active {
+            background: var(--override-bg);
+            border-color: var(--override-border);
+            color: var(--override-text);
+        }
+
+        .override-input { 
+            background-color: var(--override-bg); 
+            border-color: var(--override-border); 
+            color: var(--override-text); 
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        .override-input:focus { border-color: var(--override-text); box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2), inset 0 2px 4px rgba(0,0,0,0.2); }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            background: var(--border);
+            border-radius: 99px;
+            outline: none;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
+            margin-top: 5px;
+            padding: 0;
+            border: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--override-text);
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+            transition: transform 0.1s;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+        /* Output Tables */
+        .outputs-table-wrapper {
+            overflow-x: auto;
+            width: 100%;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: var(--accent);
+        }
+
+        .outputs-table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+        .outputs-table th { 
+            text-align: left; 
+            padding: 16px; 
+            color: var(--text-muted); 
+            font-weight: 800; 
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: 0.75rem;
+            border-bottom: 1px solid var(--border); 
+            background: rgba(255,255,255,0.02); 
+        }
+        .outputs-table td { padding: 16px; border-bottom: 1px solid var(--border); }
+        .outputs-table tr:last-child td { border-bottom: none; }
+        
+        .win-cell { background-color: var(--success-bg); color: var(--success); font-weight: 800; font-family: 'JetBrains Mono', monospace;}
+        .loss-cell { background-color: var(--danger-bg); color: var(--danger); font-weight: 800; font-family: 'JetBrains Mono', monospace;}
+        .neutral-cell { color: var(--text-main); font-weight: 800; font-family: 'JetBrains Mono', monospace; }
+        .mono-text { font-family: 'JetBrains Mono', monospace; }
+
+        @media (max-width: 900px) {
+            .split-panels { grid-template-columns: 1fr; }
+            .summary-panel { grid-template-columns: 1fr 1fr; }
+            .strategy-group { grid-column: 1 / -1; }
+            .outputs-table { min-width: 500px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="workspace-header">
+    <h1>Standard MB Calculator</h1>
+    <button class="btn btn-primary" onclick="createNewCalc()">+ New Calculator</button>
+</div>
+
+<div id="workspaceRoot"></div>
+
+<script>
+    let calcInstances = [];
+    let instanceIdCounter = 0;
+
+    function createNewCalc() {
+        const id = instanceIdCounter++;
+        calcInstances.push({
+            id: id,
+            title: `Calculator #${calcInstances.length + 1}`,
+            betType: "normal",
+            bStake: "10.00",
+            bOdds: "2.00",
+            bComm: "0.00",
+            lOdds: "2.05",
+            lComm: "0.00",
+            activeStrategy: "standard", // standard, underlay, overlay, custom
+            actualLay: null // Will be auto-calculated on first render
+        });
+        renderWorkspace();
+    }
+
+    function removeInstance(id) {
+        calcInstances = calcInstances.filter(item => item.id !== id);
+        renderWorkspace();
+    }
+
+    function updateField(id, key, value) {
+        const inst = calcInstances.find(item => item.id === id);
+        if (!inst) return;
+        
+        inst[key] = value;
+        
+        // If user manually changes lay odds, stake, or back inputs, recalculate 
+        // We will default back to standard if they change odds/stakes unless they manually override the lay stake.
+        if (key !== 'actualLay' && key !== 'title' && key !== 'activeStrategy') {
+            // Re-apply current strategy logic
+            calculateMath(inst, inst.activeStrategy);
+        } else if (key === 'actualLay') {
+            inst.activeStrategy = 'custom';
+            calculateMath(inst, 'custom');
+        } else {
+            calculateMath(inst, inst.activeStrategy);
+        }
+    }
+
+    function setStrategy(id, strategy) {
+        const inst = calcInstances.find(item => item.id === id);
+        if (!inst) return;
+        inst.activeStrategy = strategy;
+        calculateMath(inst, strategy);
+        renderWorkspace(); // Full re-render to update UI button states
+    }
+
+    function calculateMath(inst, strategyMode) {
+        const bStake = parseFloat(inst.bStake) || 0;
+        const bOdds = parseFloat(inst.bOdds) || 0;
+        const bComm = parseFloat(inst.bComm) || 0;
+        const lOdds = parseFloat(inst.lOdds) || 0;
+        const lComm = parseFloat(inst.lComm) || 0;
+
+        const bCommDec = bComm / 100;
+        const lCommDec = lComm / 100;
+
+        // Base Calculations
+        let backCost = inst.betType === 'normal' ? bStake : 0;
+        let backReturnRaw = 0;
+        if (inst.betType === 'normal') backReturnRaw = bStake * bOdds;
+        if (inst.betType === 'snr') backReturnRaw = bStake * (bOdds - 1);
+        if (inst.betType === 'sr') backReturnRaw = bStake * bOdds;
+
+        let pBackGross = backReturnRaw - backCost;
+        let bookieWinProfitPreLay = (pBackGross * (1 - bCommDec)); 
+        
+        // Target Lay Stakes based on Strategy
+        let standardLay = 0;
+        let underlay = 0;
+        let overlay = 0;
+
+        if (lOdds > lCommDec && lOdds > 1) {
+            standardLay = (bookieWinProfitPreLay + backCost) / (lOdds - lCommDec);
+            underlay = backCost / (1 - lCommDec);
+            overlay = bookieWinProfitPreLay / (lOdds - 1);
+        }
+
+        // Apply strategy to Actual Lay
+        if (strategyMode === 'standard') inst.actualLay = standardLay;
+        else if (strategyMode === 'underlay') inst.actualLay = underlay;
+        else if (strategyMode === 'overlay') inst.actualLay = overlay;
+        // if custom, inst.actualLay stays as whatever the user inputted
+
+        const usedLay = parseFloat(inst.actualLay) || 0;
+        const liability = usedLay * (Math.max(1, lOdds) - 1);
+
+        // Final Outcomes
+        const bookieWinsPL = bookieWinProfitPreLay - liability;
+        const exchangeWinsPL = (usedLay * (1 - lCommDec)) - backCost;
+
+        inst.calcData = {
+            standardLay,
+            liability,
+            usedLay,
+            bookieWinProfitPreLay,
+            backCost,
+            bookieWinsPL,
+            exchangeWinsPL
+        };
+
+        updateDOM(inst);
+    }
+
+    function updateDOM(inst) {
+        const id = inst.id;
+        const d = inst.calcData;
+
+        // Update displays
+        const advEl = document.getElementById(`adv_${id}`);
+        const liabEl = document.getElementById(`liab_${id}`);
+        const overEl = document.getElementById(`override_${id}`);
+        const slideEl = document.getElementById(`slider_${id}`);
+        const tbody = document.getElementById(`results_${id}`);
+
+        if(advEl) advEl.innerText = `£${d.standardLay.toFixed(2)}`;
+        if(liabEl) liabEl.innerText = `£${d.liability.toFixed(2)}`;
+        
+        if(overEl && document.activeElement !== overEl) overEl.value = d.usedLay.toFixed(2);
+        
+        if(slideEl) {
+            slideEl.max = Math.max(d.standardLay * 2, 0.01).toFixed(2);
+            if(document.activeElement !== slideEl) slideEl.value = d.usedLay.toFixed(2);
+        }
+
+        if(tbody) {
+            const formatPL = (val) => {
+                const abs = Math.abs(val).toFixed(2);
+                if (Math.abs(val) < 0.01) return `<span class="neutral-cell">£0.00</span>`;
+                return val > 0 ? `<span class="win-cell">+£${abs}</span>` : `<span class="loss-cell">-£${abs}</span>`;
+            };
+
+            const bookieWinStr = formatPL(d.bookieWinProfitPreLay);
+            const bookieLossStr = formatPL(-d.backCost);
+            const exchLiabStr = formatPL(-d.liability);
+            const exchWinStr = formatPL(d.usedLay * (1 - (parseFloat(inst.lComm)||0)/100));
+
+            tbody.innerHTML = `
+                <tr>
+                    <td><strong>Bookmaker Wins</strong></td>
+                    <td>${bookieWinStr}</td>
+                    <td>${exchLiabStr}</td>
+                    <td>${formatPL(d.bookieWinsPL)}</td>
+                </tr>
+                <tr>
+                    <td><strong>Exchange Wins</strong></td>
+                    <td>${bookieLossStr}</td>
+                    <td>${exchWinStr}</td>
+                    <td>${formatPL(d.exchangeWinsPL)}</td>
+                </tr>
+            `;
+        }
+
+        // Update buttons visually
+        const btns = document.querySelectorAll(`#strat_group_${id} .btn-strat`);
+        btns.forEach(b => {
+            b.classList.remove('active');
+            if (b.dataset.strat === inst.activeStrategy) b.classList.add('active');
+        });
+    }
+
+    function renderWorkspace() {
+        const root = document.getElementById('workspaceRoot');
+        root.innerHTML = '';
+        
+        calcInstances.forEach(inst => {
+            if (inst.actualLay === null) {
+                calculateMath(inst, 'standard');
+            }
+
+            const card = document.createElement('div');
+            card.className = 'calc-card';
+            
+            card.innerHTML = `
+                <div class="calc-header">
+                    <input type="text" class="title-input" value="${inst.title}" oninput="updateField(${inst.id}, 'title', this.value)">
+                    <button class="btn btn-danger" onclick="removeInstance(${inst.id})">Close</button>
+                </div>
+                <div class="calc-body">
+                    <div class="type-selector">
+                        <label style="margin:0;">Bet Type:</label>
+                        <select style="width: auto; min-width: 200px;" onchange="updateField(${inst.id}, 'betType', this.value)">
+                            <option value="normal" ${inst.betType === 'normal' ? 'selected' : ''}>Normal (Qualifying)</option>
+                            <option value="snr" ${inst.betType === 'snr' ? 'selected' : ''}>Free Bet (Stake Not Returned)</option>
+                            <option value="sr" ${inst.betType === 'sr' ? 'selected' : ''}>Free Bet (Stake Returned)</option>
+                        </select>
+                    </div>
+
+                    <div class="split-panels">
+                        <div class="input-panel back-side">
+                            <div class="panel-title">Bookmaker (Back)</div>
+                            
+                            <div class="full-width">
+                                <label>Back Stake (£)</label>
+                                <input type="number" step="0.01" value="${inst.bStake}" oninput="updateField(${inst.id}, 'bStake', this.value)">
+                            </div>
+                            <div>
+                                <label>Back Odds</label>
+                                <input type="number" step="0.01" value="${inst.bOdds}" oninput="updateField(${inst.id}, 'bOdds', this.value)">
+                            </div>
+                            <div>
+                                <label>Commission (%)</label>
+                                <input type="number" step="0.1" value="${inst.bComm}" oninput="updateField(${inst.id}, 'bComm', this.value)">
+                            </div>
+                        </div>
+
+                        <div class="input-panel lay-side">
+                            <div class="panel-title">Exchange (Lay)</div>
+                            
+                            <div class="full-width">
+                                <label>Lay Odds</label>
+                                <input type="number" step="0.01" value="${inst.lOdds}" oninput="updateField(${inst.id}, 'lOdds', this.value)">
+                            </div>
+                            <div class="full-width">
+                                <label>Commission (%)</label>
+                                <input type="number" step="0.1" value="${inst.lComm}" oninput="updateField(${inst.id}, 'lComm', this.value)">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="summary-panel">
+                        <div class="big-display">
+                            <label>Standard Lay Stake</label>
+                            <div class="value" id="adv_${inst.id}">£0.00</div>
+                        </div>
+                        <div class="big-display">
+                            <label style="color: var(--danger);">Exchange Liability</label>
+                            <div class="value liab" id="liab_${inst.id}">£0.00</div>
+                        </div>
+                        <div class="strategy-group" id="strat_group_${inst.id}">
+                            <label style="color:var(--override-text);">Actual Lay & Strategy Overrides</label>
+                            <div class="strategy-buttons">
+                                <button class="btn-strat ${inst.activeStrategy === 'standard' ? 'active' : ''}" data-strat="standard" onclick="setStrategy(${inst.id}, 'standard')">Standard</button>
+                                <button class="btn-strat ${inst.activeStrategy === 'underlay' ? 'active' : ''}" data-strat="underlay" onclick="setStrategy(${inst.id}, 'underlay')">Underlay</button>
+                                <button class="btn-strat ${inst.activeStrategy === 'overlay' ? 'active' : ''}" data-strat="overlay" onclick="setStrategy(${inst.id}, 'overlay')">Overlay</button>
+                            </div>
+                            <div>
+                                <input type="number" id="override_${inst.id}" class="override-input" step="0.01" oninput="updateField(${inst.id}, 'actualLay', this.value)">
+                                <input type="range" id="slider_${inst.id}" min="0" max="100" step="0.01" oninput="updateField(${inst.id}, 'actualLay', this.value)">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="outputs-table-wrapper">
+                        <table class="outputs-table">
+                            <thead>
+                                <tr>
+                                    <th>Outcome</th>
+                                    <th>Bookmaker P&L</th>
+                                    <th>Exchange P&L</th>
+                                    <th>Overall Profit / Loss</th>
+                                </tr>
+                            </thead>
+                            <tbody id="results_${inst.id}"></tbody>
+                        </table>
+                    </div>
+
+                </div>
+            `;
+            root.appendChild(card);
+            
+            calculateMath(inst, inst.activeStrategy);
+        });
+    }
+
+    // Initialize first calculator on load
+    createNewCalc();
+</script>
+</body>
+</html>
