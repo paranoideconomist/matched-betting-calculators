@@ -342,7 +342,7 @@
 
         /* Output Tables */
         .outputs-table-wrapper {
-            overflow-x: auto;
+            overflow-x: hidden; /* Changed from auto */
             width: 100%;
             border: 1px solid var(--border);
             border-radius: 12px;
@@ -369,11 +369,46 @@
         .neutral-cell { color: var(--text-main); font-weight: 800; font-family: 'JetBrains Mono', monospace; }
         .mono-text { font-family: 'JetBrains Mono', monospace; }
 
+        /* Adjusting for tablets */
         @media (max-width: 900px) {
             .split-panels { grid-template-columns: 1fr; }
             .summary-panel { grid-template-columns: 1fr 1fr; }
             .strategy-group { grid-column: 1 / -1; }
-            .outputs-table { min-width: 500px; }
+        }
+
+        /* Adjusting for mobile phones - Stacking the table items */
+        @media (max-width: 600px) {
+            .summary-panel { grid-template-columns: 1fr; }
+            
+            .outputs-table thead { display: none; }
+            .outputs-table, .outputs-table tbody, .outputs-table tr, .outputs-table td {
+                display: block;
+                width: 100%;
+            }
+            .outputs-table tr {
+                background: rgba(255,255,255,0.02);
+            }
+            .outputs-table td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                text-align: right;
+                padding: 12px 16px;
+                border-bottom: 1px solid var(--border);
+            }
+            .outputs-table td:last-child {
+                border-bottom: none;
+            }
+            .outputs-table td::before {
+                content: attr(data-label);
+                font-weight: 800;
+                color: var(--text-muted);
+                text-transform: uppercase;
+                font-size: 0.75rem;
+                letter-spacing: 0.05em;
+                margin-right: 15px;
+                text-align: left;
+            }
         }
     </style>
 </head>
@@ -529,18 +564,19 @@
             const exchLiabStr = formatPL(-d.liability);
             const exchWinStr = formatPL(d.usedLay * (1 - (parseFloat(inst.lComm)||0)/100));
 
+            /* ADDED data-label attributes so CSS knows what to display on mobile */
             tbody.innerHTML = `
                 <tr>
-                    <td><strong>Bookmaker Wins</strong></td>
-                    <td>${bookieWinStr}</td>
-                    <td>${exchLiabStr}</td>
-                    <td>${formatPL(d.bookieWinsPL)}</td>
+                    <td data-label="Outcome"><strong>Bookmaker Wins</strong></td>
+                    <td data-label="Bookmaker P&L">${bookieWinStr}</td>
+                    <td data-label="Exchange P&L">${exchLiabStr}</td>
+                    <td data-label="Overall P&L">${formatPL(d.bookieWinsPL)}</td>
                 </tr>
                 <tr>
-                    <td><strong>Exchange Wins</strong></td>
-                    <td>${bookieLossStr}</td>
-                    <td>${exchWinStr}</td>
-                    <td>${formatPL(d.exchangeWinsPL)}</td>
+                    <td data-label="Outcome"><strong>Exchange Wins</strong></td>
+                    <td data-label="Bookmaker P&L">${bookieLossStr}</td>
+                    <td data-label="Exchange P&L">${exchWinStr}</td>
+                    <td data-label="Overall P&L">${formatPL(d.exchangeWinsPL)}</td>
                 </tr>
             `;
         }
