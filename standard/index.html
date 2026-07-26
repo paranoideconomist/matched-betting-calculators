@@ -38,6 +38,11 @@
             --override-text: #f59e0b; 
         }
 
+        /* Added box-sizing so padding doesn't cause overflow */
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
         body { 
             font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; 
             background-color: var(--bg-main); 
@@ -178,7 +183,6 @@
             background: var(--bg-main);
             color: var(--text-main);
             font-family: 'JetBrains Mono', monospace;
-            box-sizing: border-box;
             width: 100%;
             transition: all 0.2s ease;
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
@@ -342,7 +346,7 @@
 
         /* Output Tables */
         .outputs-table-wrapper {
-            overflow-x: hidden; /* Changed from auto */
+            /* Removed overflow-x: hidden to prevent chopping off amounts */
             width: 100%;
             border: 1px solid var(--border);
             border-radius: 12px;
@@ -367,19 +371,14 @@
         .win-cell { background-color: var(--success-bg); color: var(--success); font-weight: 800; font-family: 'JetBrains Mono', monospace;}
         .loss-cell { background-color: var(--danger-bg); color: var(--danger); font-weight: 800; font-family: 'JetBrains Mono', monospace;}
         .neutral-cell { color: var(--text-main); font-weight: 800; font-family: 'JetBrains Mono', monospace; }
-        .mono-text { font-family: 'JetBrains Mono', monospace; }
 
-        /* Adjusting for tablets */
+        /* Tablet & Mobile Adjustments */
         @media (max-width: 900px) {
             .split-panels { grid-template-columns: 1fr; }
             .summary-panel { grid-template-columns: 1fr 1fr; }
             .strategy-group { grid-column: 1 / -1; }
-        }
-
-        /* Adjusting for mobile phones - Stacking the table items */
-        @media (max-width: 600px) {
-            .summary-panel { grid-template-columns: 1fr; }
             
+            /* The table will now stack vertically at a wider width (900px) to prevent amounts being cut off */
             .outputs-table thead { display: none; }
             .outputs-table, .outputs-table tbody, .outputs-table tr, .outputs-table td {
                 display: block;
@@ -399,6 +398,9 @@
             .outputs-table td:last-child {
                 border-bottom: none;
             }
+            .outputs-table tr:not(:last-child) {
+                border-bottom: 3px solid var(--bg-main);
+            }
             .outputs-table td::before {
                 content: attr(data-label);
                 font-weight: 800;
@@ -409,6 +411,10 @@
                 margin-right: 15px;
                 text-align: left;
             }
+        }
+
+        @media (max-width: 600px) {
+            .summary-panel { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -436,8 +442,8 @@
             bComm: "0.00",
             lOdds: "2.05",
             lComm: "0.00",
-            activeStrategy: "standard", // standard, underlay, overlay, custom
-            actualLay: null // Will be auto-calculated on first render
+            activeStrategy: "standard", 
+            actualLay: null 
         });
         renderWorkspace();
     }
@@ -453,10 +459,7 @@
         
         inst[key] = value;
         
-        // If user manually changes lay odds, stake, or back inputs, recalculate 
-        // We will default back to standard if they change odds/stakes unless they manually override the lay stake.
         if (key !== 'actualLay' && key !== 'title' && key !== 'activeStrategy') {
-            // Re-apply current strategy logic
             calculateMath(inst, inst.activeStrategy);
         } else if (key === 'actualLay') {
             inst.activeStrategy = 'custom';
@@ -471,7 +474,7 @@
         if (!inst) return;
         inst.activeStrategy = strategy;
         calculateMath(inst, strategy);
-        renderWorkspace(); // Full re-render to update UI button states
+        renderWorkspace(); 
     }
 
     function calculateMath(inst, strategyMode) {
@@ -484,7 +487,6 @@
         const bCommDec = bComm / 100;
         const lCommDec = lComm / 100;
 
-        // Base Calculations
         let backCost = inst.betType === 'normal' ? bStake : 0;
         let backReturnRaw = 0;
         if (inst.betType === 'normal') backReturnRaw = bStake * bOdds;
@@ -494,7 +496,6 @@
         let pBackGross = backReturnRaw - backCost;
         let bookieWinProfitPreLay = (pBackGross * (1 - bCommDec)); 
         
-        // Target Lay Stakes based on Strategy
         let standardLay = 0;
         let underlay = 0;
         let overlay = 0;
@@ -505,16 +506,13 @@
             overlay = bookieWinProfitPreLay / (lOdds - 1);
         }
 
-        // Apply strategy to Actual Lay
         if (strategyMode === 'standard') inst.actualLay = standardLay;
         else if (strategyMode === 'underlay') inst.actualLay = underlay;
         else if (strategyMode === 'overlay') inst.actualLay = overlay;
-        // if custom, inst.actualLay stays as whatever the user inputted
 
         const usedLay = parseFloat(inst.actualLay) || 0;
         const liability = usedLay * (Math.max(1, lOdds) - 1);
 
-        // Final Outcomes
         const bookieWinsPL = bookieWinProfitPreLay - liability;
         const exchangeWinsPL = (usedLay * (1 - lCommDec)) - backCost;
 
@@ -535,7 +533,6 @@
         const id = inst.id;
         const d = inst.calcData;
 
-        // Update displays
         const advEl = document.getElementById(`adv_${id}`);
         const liabEl = document.getElementById(`liab_${id}`);
         const overEl = document.getElementById(`override_${id}`);
@@ -564,7 +561,6 @@
             const exchLiabStr = formatPL(-d.liability);
             const exchWinStr = formatPL(d.usedLay * (1 - (parseFloat(inst.lComm)||0)/100));
 
-            /* ADDED data-label attributes so CSS knows what to display on mobile */
             tbody.innerHTML = `
                 <tr>
                     <td data-label="Outcome"><strong>Bookmaker Wins</strong></td>
@@ -581,7 +577,6 @@
             `;
         }
 
-        // Update buttons visually
         const btns = document.querySelectorAll(`#strat_group_${id} .btn-strat`);
         btns.forEach(b => {
             b.classList.remove('active');
@@ -693,7 +688,6 @@
         });
     }
 
-    // Initialize first calculator on load
     createNewCalc();
 </script>
 </body>
