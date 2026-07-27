@@ -491,10 +491,34 @@
 <script>
     let accaInstances = [];
     let instanceIdCounter = 0;
+    
+    // Constants for local storage
+    const STORAGE_KEY = 'seqCalcsState_v1';
+    const ID_KEY = 'seqCalcIdCounter_v1';
 
     function autoGrow(element) {
         element.style.height = "auto";
         element.style.height = (element.scrollHeight) + "px";
+    }
+
+    function init() {
+        const savedData = localStorage.getItem(STORAGE_KEY);
+        if (savedData) {
+            try {
+                accaInstances = JSON.parse(savedData);
+                instanceIdCounter = parseInt(localStorage.getItem(ID_KEY)) || accaInstances.length;
+                renderWorkspace();
+            } catch (e) {
+                createNewAcca();
+            }
+        } else {
+            createNewAcca();
+        }
+    }
+
+    function saveState() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(accaInstances));
+        localStorage.setItem(ID_KEY, instanceIdCounter);
     }
 
     function createNewAcca() {
@@ -514,11 +538,13 @@
                 { name: "", odds: "", commission: "", actualLay: "", notes: "", completed: false }
             ]
         });
+        saveState();
         renderWorkspace();
     }
 
     function removeInstance(id) {
         accaInstances = accaInstances.filter(item => item.id !== id);
+        saveState();
         renderWorkspace();
     }
 
@@ -526,6 +552,7 @@
         const inst = accaInstances.find(item => item.id === id);
         if (inst && inst.legs.length < 10) {
             inst.legs.push({ name: "", odds: "", commission: "", actualLay: "", notes: "", completed: false });
+            saveState();
             renderWorkspace();
         }
     }
@@ -534,6 +561,7 @@
         const inst = accaInstances.find(item => item.id === id);
         if (inst && inst.legs.length > 2) {
             inst.legs.splice(index, 1);
+            saveState();
             renderWorkspace();
         }
     }
@@ -553,9 +581,11 @@
         }
         
         if (key === 'isInsurance') {
+            saveState();
             renderWorkspace();
         } else {
             calculateInstance(id);
+            saveState();
         }
     }
 
@@ -893,7 +923,8 @@
         });
     }
 
-    createNewAcca();
+    // Initialize the app and bind state management
+    init();
 </script>
 </body>
 </html>
