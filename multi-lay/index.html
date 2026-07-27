@@ -435,10 +435,34 @@
 <script>
     let mlInstances = [];
     let instanceIdCounter = 0;
+    
+    // Constants for local storage
+    const STORAGE_KEY = 'mlCalcsState_v1';
+    const ID_KEY = 'mlCalcIdCounter_v1';
 
     function autoGrow(element) {
         element.style.height = "auto";
         element.style.height = (element.scrollHeight) + "px";
+    }
+    
+    function init() {
+        const savedData = localStorage.getItem(STORAGE_KEY);
+        if (savedData) {
+            try {
+                mlInstances = JSON.parse(savedData);
+                instanceIdCounter = parseInt(localStorage.getItem(ID_KEY)) || mlInstances.length;
+                renderWorkspace();
+            } catch (e) {
+                createNewInstance();
+            }
+        } else {
+            createNewInstance();
+        }
+    }
+
+    function saveState() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(mlInstances));
+        localStorage.setItem(ID_KEY, instanceIdCounter);
     }
 
     function createNewInstance() {
@@ -456,11 +480,13 @@
                 { name: "", odds: "", bias: 100 }
             ]
         });
+        saveState();
         renderWorkspace();
     }
 
     function removeInstance(id) {
         mlInstances = mlInstances.filter(item => item.id !== id);
+        saveState();
         renderWorkspace();
     }
 
@@ -468,6 +494,7 @@
         const inst = mlInstances.find(item => item.id === id);
         if (inst && inst.legs.length < 6) { 
             inst.legs.push({ name: "", odds: "", bias: 100 });
+            saveState();
             renderWorkspace();
         }
     }
@@ -476,6 +503,7 @@
         const inst = mlInstances.find(item => item.id === id);
         if (inst && inst.legs.length > 2) {
             inst.legs.splice(index, 1);
+            saveState();
             renderWorkspace();
         }
     }
@@ -499,6 +527,7 @@
         }
         
         calculateInstance(id);
+        saveState();
     }
 
     function calculateInstance(id) {
@@ -699,7 +728,8 @@
         });
     }
 
-    createNewInstance();
+    // Initialize application instead of just calling createNewInstance()
+    init();
 </script>
 </body>
 </html>
