@@ -10,25 +10,21 @@
     
     <style>
         :root {
-            /* Deep, modern dark mode palette */
-            --bg-main: #09090b;       
-            --card-bg: #18181b;       
+            --bg-main: #09090b;      
+            --card-bg: #18181b;      
             --accent: #09090b;        
             --border: #27272a;        
             --border-hover: #3f3f46;  
             
-            /* Typography */
-            --text-main: #f4f4f5;     
+            --text-main: #f4f4f5;    
             --text-muted: #a1a1aa;    
             
-            /* Brand & Accents */
-            --primary: #3b82f6;       /* Back Bet Blue */
+            --primary: #3b82f6;       
             --primary-glow: rgba(59, 130, 246, 0.4);
-            --lay-color: #e11d48;     /* Lay Bet Pink/Red */
+            --lay-color: #e11d48;     
             --lay-glow: rgba(225, 29, 72, 0.4);
             
-            /* Status Colors */
-            --success: #10b981;       
+            --success: #10b981;      
             --success-bg: rgba(16, 185, 129, 0.1);
             --danger: #ef4444;        
             --danger-bg: rgba(239, 68, 68, 0.1);
@@ -38,7 +34,6 @@
             --override-text: #f59e0b; 
         }
 
-        /* Added box-sizing so padding doesn't cause overflow */
         *, *::before, *::after {
             box-sizing: border-box;
         }
@@ -138,6 +133,7 @@
             gap: 15px;
             position: relative;
             overflow: hidden;
+            align-content: start;
         }
 
         .input-panel.back-side {
@@ -175,7 +171,7 @@
             margin-bottom: 6px;
         }
 
-        input, select {
+        input[type="number"], select {
             padding: 10px 12px;
             border: 1px solid var(--border);
             border-radius: 8px;
@@ -190,14 +186,14 @@
         
         select { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; }
 
-        input:focus, select:focus {
+        input[type="number"]:focus, select:focus {
             outline: none;
             border-color: var(--primary);
             background: var(--bg-main);
             box-shadow: 0 0 0 2px var(--primary-glow), inset 0 2px 4px rgba(0,0,0,0.2);
         }
 
-        .lay-side input:focus {
+        .lay-side input[type="number"]:focus {
             border-color: var(--lay-color);
             box-shadow: 0 0 0 2px var(--lay-glow), inset 0 2px 4px rgba(0,0,0,0.2);
         }
@@ -223,6 +219,8 @@
         .title-input:focus {
             background: var(--bg-main);
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+            border-radius: 6px;
+            outline: none;
         }
 
         .btn {
@@ -344,9 +342,8 @@
         }
         input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
 
-        /* Output Tables */
+        /* Outputs Table */
         .outputs-table-wrapper {
-            /* Removed overflow-x: hidden to prevent chopping off amounts */
             width: 100%;
             border: 1px solid var(--border);
             border-radius: 12px;
@@ -372,13 +369,11 @@
         .loss-cell { background-color: var(--danger-bg); color: var(--danger); font-weight: 800; font-family: 'JetBrains Mono', monospace;}
         .neutral-cell { color: var(--text-main); font-weight: 800; font-family: 'JetBrains Mono', monospace; }
 
-        /* Tablet & Mobile Adjustments */
         @media (max-width: 900px) {
             .split-panels { grid-template-columns: 1fr; }
             .summary-panel { grid-template-columns: 1fr 1fr; }
             .strategy-group { grid-column: 1 / -1; }
             
-            /* The table will now stack vertically at a wider width (900px) to prevent amounts being cut off */
             .outputs-table thead { display: none; }
             .outputs-table, .outputs-table tbody, .outputs-table tr, .outputs-table td {
                 display: block;
@@ -430,6 +425,28 @@
 <script>
     let calcInstances = [];
     let instanceIdCounter = 0;
+    const STORAGE_KEY = 'mbCalcsState_v2';
+    const ID_KEY = 'mbCalcIdCounter_v2';
+
+    function init() {
+        const savedData = localStorage.getItem(STORAGE_KEY);
+        if (savedData) {
+            try {
+                calcInstances = JSON.parse(savedData);
+                instanceIdCounter = parseInt(localStorage.getItem(ID_KEY)) || calcInstances.length;
+                renderWorkspace();
+            } catch (e) {
+                createNewCalc();
+            }
+        } else {
+            createNewCalc();
+        }
+    }
+
+    function saveState() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(calcInstances));
+        localStorage.setItem(ID_KEY, instanceIdCounter);
+    }
 
     function createNewCalc() {
         const id = instanceIdCounter++;
@@ -437,19 +454,24 @@
             id: id,
             title: `Calculator #${calcInstances.length + 1}`,
             betType: "normal",
-            bStake: "10.00",
-            bOdds: "2.00",
-            bComm: "0.00",
-            lOdds: "2.05",
-            lComm: "0.00",
+            bStake: "",
+            bOdds: "",
+            bComm: "",
+            lOdds: "",
+            lComm: "",
+            isPartial: false,
+            matchedStake: "",
+            matchedOdds: "",
             activeStrategy: "standard", 
             actualLay: null 
         });
+        saveState();
         renderWorkspace();
     }
 
     function removeInstance(id) {
         calcInstances = calcInstances.filter(item => item.id !== id);
+        saveState();
         renderWorkspace();
     }
 
@@ -459,6 +481,12 @@
         
         inst[key] = value;
         
+        if (key === 'isPartial') {
+            // Re-render to show/hide partial inputs
+            renderWorkspace(); 
+            return;
+        }
+        
         if (key !== 'actualLay' && key !== 'title' && key !== 'activeStrategy') {
             calculateMath(inst, inst.activeStrategy);
         } else if (key === 'actualLay') {
@@ -467,6 +495,7 @@
         } else {
             calculateMath(inst, inst.activeStrategy);
         }
+        saveState();
     }
 
     function setStrategy(id, strategy) {
@@ -474,7 +503,25 @@
         if (!inst) return;
         inst.activeStrategy = strategy;
         calculateMath(inst, strategy);
+        saveState();
         renderWorkspace(); 
+    }
+
+    function copyLayStake(id) {
+        const inst = calcInstances.find(item => item.id === id);
+        if (inst && inst.calcData) {
+            const val = inst.calcData.usedLay.toFixed(2);
+            navigator.clipboard.writeText(val);
+            const btn = document.getElementById(`copyBtn_${id}`);
+            if(btn) {
+                btn.innerText = 'Copied!';
+                btn.style.color = 'var(--success)';
+                setTimeout(() => {
+                    btn.innerText = 'Copy';
+                    btn.style.color = 'var(--text-main)';
+                }, 2000);
+            }
+        }
     }
 
     function calculateMath(inst, strategyMode) {
@@ -483,6 +530,10 @@
         const bComm = parseFloat(inst.bComm) || 0;
         const lOdds = parseFloat(inst.lOdds) || 0;
         const lComm = parseFloat(inst.lComm) || 0;
+        
+        const isPartial = inst.isPartial || false;
+        const mStake = isPartial ? (parseFloat(inst.matchedStake) || 0) : 0;
+        const mOdds = isPartial ? (parseFloat(inst.matchedOdds) || 0) : 0;
 
         const bCommDec = bComm / 100;
         const lCommDec = lComm / 100;
@@ -501,24 +552,34 @@
         let overlay = 0;
 
         if (lOdds > lCommDec && lOdds > 1) {
-            standardLay = (bookieWinProfitPreLay + backCost) / (lOdds - lCommDec);
-            underlay = backCost / (1 - lCommDec);
-            overlay = bookieWinProfitPreLay / (lOdds - 1);
+            let B = bookieWinProfitPreLay + backCost;
+            let mDeduction = mStake * (mOdds - lCommDec);
+            
+            standardLay = (B - mDeduction) / (lOdds - lCommDec);
+            underlay = (backCost / (1 - lCommDec)) - mStake;
+            overlay = (bookieWinProfitPreLay - mStake * (mOdds - 1)) / (lOdds - 1);
         }
+
+        // Prevent negative lay suggestions if heavily partially matched
+        standardLay = Math.max(0, standardLay);
+        underlay = Math.max(0, underlay);
+        overlay = Math.max(0, overlay);
 
         if (strategyMode === 'standard') inst.actualLay = standardLay;
         else if (strategyMode === 'underlay') inst.actualLay = underlay;
         else if (strategyMode === 'overlay') inst.actualLay = overlay;
 
         const usedLay = parseFloat(inst.actualLay) || 0;
-        const liability = usedLay * (Math.max(1, lOdds) - 1);
+        
+        const totalLiability = (mStake * Math.max(0, mOdds - 1)) + (usedLay * Math.max(0, lOdds - 1));
+        const totalExchReturn = (mStake + usedLay) * (1 - lCommDec);
 
-        const bookieWinsPL = bookieWinProfitPreLay - liability;
-        const exchangeWinsPL = (usedLay * (1 - lCommDec)) - backCost;
+        const bookieWinsPL = bookieWinProfitPreLay - totalLiability;
+        const exchangeWinsPL = totalExchReturn - backCost;
 
         inst.calcData = {
             standardLay,
-            liability,
+            totalLiability,
             usedLay,
             bookieWinProfitPreLay,
             backCost,
@@ -539,13 +600,14 @@
         const slideEl = document.getElementById(`slider_${id}`);
         const tbody = document.getElementById(`results_${id}`);
 
-        if(advEl) advEl.innerText = `£${d.standardLay.toFixed(2)}`;
-        if(liabEl) liabEl.innerText = `£${d.liability.toFixed(2)}`;
+        if(advEl) advEl.innerText = `£${d.usedLay.toFixed(2)}`;
+        if(liabEl) liabEl.innerText = `£${d.totalLiability.toFixed(2)}`;
         
         if(overEl && document.activeElement !== overEl) overEl.value = d.usedLay.toFixed(2);
         
         if(slideEl) {
-            slideEl.max = Math.max(d.standardLay * 2, 0.01).toFixed(2);
+            // Expand slider max if custom actualLay is higher than 2x standard
+            slideEl.max = Math.max(d.standardLay * 2, d.usedLay, 0.01).toFixed(2);
             if(document.activeElement !== slideEl) slideEl.value = d.usedLay.toFixed(2);
         }
 
@@ -558,8 +620,8 @@
 
             const bookieWinStr = formatPL(d.bookieWinProfitPreLay);
             const bookieLossStr = formatPL(-d.backCost);
-            const exchLiabStr = formatPL(-d.liability);
-            const exchWinStr = formatPL(d.usedLay * (1 - (parseFloat(inst.lComm)||0)/100));
+            const exchLiabStr = formatPL(-d.totalLiability);
+            const exchWinStr = formatPL(d.exchangeWinsPL + d.backCost); // Raw exchange return
 
             tbody.innerHTML = `
                 <tr>
@@ -640,20 +702,43 @@
                                 <label>Commission (%)</label>
                                 <input type="number" step="0.1" value="${inst.lComm}" oninput="updateField(${inst.id}, 'lComm', this.value)">
                             </div>
+
+                            <!-- Partial Match Panel -->
+                            <div class="full-width" style="margin-top: 10px; padding-top: 15px; border-top: 1px dashed var(--border);">
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-main); font-size: 0.85rem;">
+                                    <input type="checkbox" style="width: auto; padding: 0; box-shadow: none;" ${inst.isPartial ? 'checked' : ''} onchange="updateField(${inst.id}, 'isPartial', this.checked)">
+                                    Partially Matched?
+                                </label>
+                            </div>
+                            
+                            ${inst.isPartial ? `
+                                <div>
+                                    <label>Matched Stake</label>
+                                    <input type="number" step="0.01" value="${inst.matchedStake}" oninput="updateField(${inst.id}, 'matchedStake', this.value)">
+                                </div>
+                                <div>
+                                    <label>Matched Odds</label>
+                                    <input type="number" step="0.01" value="${inst.matchedOdds}" oninput="updateField(${inst.id}, 'matchedOdds', this.value)">
+                                </div>
+                            ` : ''}
+
                         </div>
                     </div>
 
                     <div class="summary-panel">
                         <div class="big-display">
-                            <label>Standard Lay Stake</label>
-                            <div class="value" id="adv_${inst.id}">£0.00</div>
+                            <label>${inst.isPartial ? 'Remaining Lay Stake' : 'Standard Lay Stake'}</label>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div class="value" id="adv_${inst.id}">£0.00</div>
+                                <button id="copyBtn_${inst.id}" class="btn" style="background: var(--bg-main); border: 1px solid var(--border); color: var(--text-main); font-size: 0.75rem; padding: 6px 10px;" onclick="copyLayStake(${inst.id})">Copy</button>
+                            </div>
                         </div>
                         <div class="big-display">
-                            <label style="color: var(--danger);">Exchange Liability</label>
+                            <label style="color: var(--danger);">Total Exch. Liability</label>
                             <div class="value liab" id="liab_${inst.id}">£0.00</div>
                         </div>
                         <div class="strategy-group" id="strat_group_${inst.id}">
-                            <label style="color:var(--override-text);">Actual Lay & Strategy Overrides</label>
+                            <label style="color:var(--override-text);">Lay Strategy & Overrides</label>
                             <div class="strategy-buttons">
                                 <button class="btn-strat ${inst.activeStrategy === 'standard' ? 'active' : ''}" data-strat="standard" onclick="setStrategy(${inst.id}, 'standard')">Standard</button>
                                 <button class="btn-strat ${inst.activeStrategy === 'underlay' ? 'active' : ''}" data-strat="underlay" onclick="setStrategy(${inst.id}, 'underlay')">Underlay</button>
@@ -679,7 +764,6 @@
                             <tbody id="results_${inst.id}"></tbody>
                         </table>
                     </div>
-
                 </div>
             `;
             root.appendChild(card);
@@ -688,7 +772,8 @@
         });
     }
 
-    createNewCalc();
+    // Initialize application
+    init();
 </script>
 </body>
 </html>
