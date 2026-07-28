@@ -556,8 +556,14 @@
             let mDeduction = mStake * (mOdds - lCommDec);
             
             standardLay = (B - mDeduction) / (lOdds - lCommDec);
-            underlay = (backCost / (1 - lCommDec)) - mStake;
-            overlay = (bookieWinProfitPreLay - mStake * (mOdds - 1)) / (lOdds - 1);
+            
+            // Calculate both zero-liability targets
+            let targetA = (backCost / (1 - lCommDec)) - mStake; 
+            let targetB = (bookieWinProfitPreLay - mStake * (mOdds - 1)) / (lOdds - 1);
+            
+            // Underlay is always the smaller stake; Overlay is always the larger stake
+            underlay = Math.min(targetA, targetB);
+            overlay = Math.max(targetA, targetB);
         }
 
         // Prevent negative lay suggestions if heavily partially matched
