@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sequential Calculator</title>
+    <title>Sequential Calc</title>
     
     <!-- Unique Sequential Icon -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⏳</text></svg>">
@@ -41,6 +41,11 @@
             --override-text: #f59e0b; 
 
             --insurance-glow: rgba(16, 185, 129, 0.3);
+        }
+
+        /* CRUCIAL FIX: Ensures padding doesn't blow out mobile widths */
+        *, *::before, *::after {
+            box-sizing: border-box;
         }
 
         body { 
@@ -229,7 +234,6 @@
             box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2), inset 0 2px 4px rgba(0,0,0,0.2);
         }
 
-        /* Strategy Panel Styling matching Multi-Lay */
         .strategy-group {
             display: flex;
             flex-direction: column;
@@ -439,7 +443,7 @@
         .path-badge.win { background-color: var(--success-bg); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
         .path-badge.loss { background-color: var(--danger-bg); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
         .path-arrow { color: var(--border-hover); font-size: 0.8rem; font-weight: bold; margin: 0 4px; }
-        .path-container { display: flex; align-items: center; flex-wrap: wrap; gap: 2px; }
+        .path-container { display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: 2px; max-width: 100%; }
         
         .leg-header-row {
             display: grid; 
@@ -495,7 +499,6 @@
                 padding: 12px; 
                 border-radius: 8px; 
                 width: 100%; 
-                box-sizing: border-box; 
                 border: 1px solid var(--border);
             }
             .leg-done::before { 
@@ -505,7 +508,7 @@
                 font-size: 0.85rem; 
             }
             
-            .input-wrap, .actual-lay-group { width: 100%; box-sizing: border-box; }
+            .input-wrap, .actual-lay-group { width: 100%; }
             .input-wrap::before, .actual-lay-group::before {
                 content: attr(data-label);
                 display: block;
@@ -517,13 +520,17 @@
             }
 
             /* Stacked Output Table Cards on Mobile */
+            .outputs-table-wrapper {
+                background: transparent;
+                border: none;
+            }
             .outputs-table thead { display: none; }
             .outputs-table, .outputs-table tbody, .outputs-table tr, .outputs-table td {
                 display: block;
                 width: 100%;
             }
             .outputs-table tr {
-                background: rgba(255,255,255,0.02);
+                background: var(--accent);
                 border-radius: 12px;
                 margin-bottom: 15px;
                 border: 1px solid var(--border);
@@ -550,6 +557,7 @@
                 letter-spacing: 0.05em;
                 margin-right: 15px;
                 text-align: left;
+                flex-shrink: 0;
             }
         }
     </style>
@@ -674,7 +682,6 @@
         } else {
             inst[key] = value;
             
-            // Sync Strategy UI inputs visually
             if (key === 'underlayBias') {
                 const numInput = document.getElementById(`bias_override_${id}`);
                 const slider = document.getElementById(`bias_slider_${id}`);
@@ -715,7 +722,6 @@
             ? (parseFloat(inst.refundValue) || 0) * ((parseFloat(inst.refundRetention) || 0) / 100) 
             : 0;
 
-        // Backward Induction Arrays
         let layMainAdv = new Array(numLegs).fill(0);
         let layRecAdv = new Array(numLegs).fill(0);
         
@@ -853,7 +859,7 @@
         
         const refundColumnEmptyHtml = inst.isInsurance ? `<td data-label="Expected Refund" style="color:var(--text-muted)">-</td>` : '';
 
-        html += `<tr style="background: rgba(255,255,255,0.02); border-top:1px solid var(--border-hover);">
+        html += `<tr style="border-top:2px solid var(--border-hover);">
             <td data-label="Event Path">${allWinPathHtml}</td>
             <td data-label="Scenario Outcome"><strong>All Legs Win</strong></td>
             <td data-label="Back Bet P/L" style="color:var(--success)">+£${displayBackWinPL.toFixed(2)}</td>
