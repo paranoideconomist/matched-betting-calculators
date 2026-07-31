@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Luke's Pro MB Calculator</title>
+    
+    <!-- Add your favicon here! -->
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧮</text></svg>">
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
@@ -434,6 +438,17 @@
             try {
                 calcInstances = JSON.parse(savedData);
                 instanceIdCounter = parseInt(localStorage.getItem(ID_KEY)) || calcInstances.length;
+                
+                // Migrate any old calculators to the new partialLays array format smoothly
+                calcInstances.forEach(inst => {
+                    if (!inst.partialLays) {
+                        inst.partialLays = [];
+                        if (inst.isPartial && inst.matchedStake && inst.matchedOdds) {
+                            inst.partialLays.push({ stake: inst.matchedStake, odds: inst.matchedOdds });
+                        }
+                    }
+                });
+                
                 renderWorkspace();
             } catch (e) {
                 createNewCalc();
@@ -459,9 +474,7 @@
             bComm: "",
             lOdds: "",
             lComm: "",
-            isPartial: false,
-            matchedStake: "",
-            matchedOdds: "",
+            partialLays: [],
             activeStrategy: "standard", 
             actualLay: null 
         });
@@ -475,17 +488,30 @@
         renderWorkspace();
     }
 
+    function resetCalc(id) {
+        const inst = calcInstances.find(item => item.id === id);
+        if (!inst) return;
+        
+        inst.betType = "normal";
+        inst.bStake = "";
+        inst.bOdds = "";
+        inst.bComm = "";
+        inst.lOdds = "";
+        inst.lComm = "";
+        inst.partialLays = [];
+        inst.activeStrategy = "standard";
+        inst.actualLay = null;
+        
+        calculateMath(inst, 'standard');
+        saveState();
+        renderWorkspace();
+    }
+
     function updateField(id, key, value) {
         const inst = calcInstances.find(item => item.id === id);
         if (!inst) return;
         
         inst[key] = value;
-        
-        if (key === 'isPartial') {
-            // Re-render to show/hide partial inputs
-            renderWorkspace(); 
-            return;
-        }
         
         if (key !== 'actualLay' && key !== 'title' && key !== 'activeStrategy') {
             calculateMath(inst, inst.activeStrategy);
@@ -496,6 +522,32 @@
             calculateMath(inst, inst.activeStrategy);
         }
         saveState();
+    }
+
+    function addPartialLay(id) {
+        const inst = calcInstances.find(item => item.id === id);
+        if(!inst) return;
+        inst.partialLays.push({stake: "", odds: ""});
+        calculateMath(inst, inst.activeStrategy);
+        saveState();
+        renderWorkspace();
+    }
+
+    function updatePartialLay(id, index, key, value) {
+        const inst = calcInstances.find(item => item.id === id);
+        if(!inst) return;
+        inst.partialLays[index][key] = value;
+        calculateMath(inst, inst.activeStrategy);
+        saveState();
+    }
+
+    function removePartialLay(id, index) {
+        const inst = calcInstances.find(item => item.id === id);
+        if(!inst) return;
+        inst.partialLays.splice(index, 1);
+        calculateMath(inst, inst.activeStrategy);
+        saveState();
+        renderWorkspace();
     }
 
     function setStrategy(id, strategy) {
@@ -531,10 +583,6 @@
         const lOdds = parseFloat(inst.lOdds) || 0;
         const lComm = parseFloat(inst.lComm) || 0;
         
-        const isPartial = inst.isPartial || false;
-        const mStake = isPartial ? (parseFloat(inst.matchedStake) || 0) : 0;
-        const mOdds = isPartial ? (parseFloat(inst.matchedOdds) || 0) : 0;
-
         const bCommDec = bComm / 100;
         const lCommDec = lComm / 100;
 
@@ -547,19 +595,34 @@
         let pBackGross = backReturnRaw - backCost;
         let bookieWinProfitPreLay = (pBackGross * (1 - bCommDec)); 
         
+        let mStake = 0;
+        let mDeduction = 0;
+        let mLiability = 0;
+        let mReturn = 0;
+
+        if (inst.partialLays && inst.partialLays.length > 0) {
+            inst.partialLays.forEach(p => {
+                let ps = parseFloat(p.stake) || 0;
+                let po = parseFloat(p.odds) || 0;
+                mStake += ps;
+                mDeduction += ps * (po - lCommDec);
+                mLiability += ps * Math.max(0, po - 1);
+                mReturn += ps * (1 - lCommDec);
+            });
+        }
+
         let standardLay = 0;
         let underlay = 0;
         let overlay = 0;
 
         if (lOdds > lCommDec && lOdds > 1) {
             let B = bookieWinProfitPreLay + backCost;
-            let mDeduction = mStake * (mOdds - lCommDec);
             
             standardLay = (B - mDeduction) / (lOdds - lCommDec);
             
             // Calculate both zero-liability targets
             let targetA = (backCost / (1 - lCommDec)) - mStake; 
-            let targetB = (bookieWinProfitPreLay - mStake * (mOdds - 1)) / (lOdds - 1);
+            let targetB = (bookieWinProfitPreLay - mLiability) / (lOdds - 1);
             
             // Underlay is always the smaller stake; Overlay is always the larger stake
             underlay = Math.min(targetA, targetB);
@@ -577,8 +640,8 @@
 
         const usedLay = parseFloat(inst.actualLay) || 0;
         
-        const totalLiability = (mStake * Math.max(0, mOdds - 1)) + (usedLay * Math.max(0, lOdds - 1));
-        const totalExchReturn = (mStake + usedLay) * (1 - lCommDec);
+        const totalLiability = mLiability + (usedLay * Math.max(0, lOdds - 1));
+        const totalExchReturn = mReturn + (usedLay * (1 - lCommDec));
 
         const bookieWinsPL = bookieWinProfitPreLay - totalLiability;
         const exchangeWinsPL = totalExchReturn - backCost;
@@ -612,7 +675,6 @@
         if(overEl && document.activeElement !== overEl) overEl.value = d.usedLay.toFixed(2);
         
         if(slideEl) {
-            // Expand slider max if custom actualLay is higher than 2x standard
             slideEl.max = Math.max(d.standardLay * 2, d.usedLay, 0.01).toFixed(2);
             if(document.activeElement !== slideEl) slideEl.value = d.usedLay.toFixed(2);
         }
@@ -627,7 +689,7 @@
             const bookieWinStr = formatPL(d.bookieWinProfitPreLay);
             const bookieLossStr = formatPL(-d.backCost);
             const exchLiabStr = formatPL(-d.totalLiability);
-            const exchWinStr = formatPL(d.exchangeWinsPL + d.backCost); // Raw exchange return
+            const exchWinStr = formatPL(d.exchangeWinsPL + d.backCost);
 
             tbody.innerHTML = `
                 <tr>
@@ -667,7 +729,10 @@
             card.innerHTML = `
                 <div class="calc-header">
                     <input type="text" class="title-input" value="${inst.title}" oninput="updateField(${inst.id}, 'title', this.value)">
-                    <button class="btn btn-danger" onclick="removeInstance(${inst.id})">Close</button>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn" style="background: transparent; color: var(--text-muted); border: 1px solid var(--border);" onclick="resetCalc(${inst.id})">Reset</button>
+                        <button class="btn btn-danger" onclick="removeInstance(${inst.id})">Close</button>
+                    </div>
                 </div>
                 <div class="calc-body">
                     <div class="type-selector">
@@ -711,29 +776,33 @@
 
                             <!-- Partial Match Panel -->
                             <div class="full-width" style="margin-top: 10px; padding-top: 15px; border-top: 1px dashed var(--border);">
-                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-main); font-size: 0.85rem;">
-                                    <input type="checkbox" style="width: auto; padding: 0; box-shadow: none;" ${inst.isPartial ? 'checked' : ''} onchange="updateField(${inst.id}, 'isPartial', this.checked)">
-                                    Partially Matched?
-                                </label>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                    <label style="color: var(--text-main); font-size: 0.85rem; margin: 0;">Partial Lays (Already Matched)</label>
+                                    <button class="btn" style="background: var(--bg-main); border: 1px solid var(--border); color: var(--text-main); font-size: 0.75rem; padding: 4px 10px;" onclick="addPartialLay(${inst.id})">+ Add Lay</button>
+                                </div>
+                                <div style="display: flex; flex-direction: column; gap: 10px;">
+                                    ${inst.partialLays.map((p, idx) => `
+                                        <div style="display: flex; gap: 10px; align-items: flex-end; background: rgba(255,255,255,0.02); padding: 10px; border-radius: 8px; border: 1px solid var(--border);">
+                                            <div style="flex: 1;">
+                                                <label>Stake</label>
+                                                <input type="number" step="0.01" value="${p.stake}" oninput="updatePartialLay(${inst.id}, ${idx}, 'stake', this.value)">
+                                            </div>
+                                            <div style="flex: 1;">
+                                                <label>Odds</label>
+                                                <input type="number" step="0.01" value="${p.odds}" oninput="updatePartialLay(${inst.id}, ${idx}, 'odds', this.value)">
+                                            </div>
+                                            <button class="btn" style="background: transparent; color: var(--danger); border: 1px solid var(--danger); padding: 8px 12px; height: 38px;" onclick="removePartialLay(${inst.id}, ${idx})" title="Remove">✕</button>
+                                        </div>
+                                    `).join('')}
+                                </div>
                             </div>
-                            
-                            ${inst.isPartial ? `
-                                <div>
-                                    <label>Matched Stake</label>
-                                    <input type="number" step="0.01" value="${inst.matchedStake}" oninput="updateField(${inst.id}, 'matchedStake', this.value)">
-                                </div>
-                                <div>
-                                    <label>Matched Odds</label>
-                                    <input type="number" step="0.01" value="${inst.matchedOdds}" oninput="updateField(${inst.id}, 'matchedOdds', this.value)">
-                                </div>
-                            ` : ''}
 
                         </div>
                     </div>
 
                     <div class="summary-panel">
                         <div class="big-display">
-                            <label>${inst.isPartial ? 'Remaining Lay Stake' : 'Standard Lay Stake'}</label>
+                            <label>${inst.partialLays.length > 0 ? 'Remaining Lay Stake' : 'Standard Lay Stake'}</label>
                             <div style="display: flex; align-items: center; gap: 12px;">
                                 <div class="value" id="adv_${inst.id}">£0.00</div>
                                 <button id="copyBtn_${inst.id}" class="btn" style="background: var(--bg-main); border: 1px solid var(--border); color: var(--text-main); font-size: 0.75rem; padding: 6px 10px;" onclick="copyLayStake(${inst.id})">Copy</button>
