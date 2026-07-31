@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Luke's Multi-Lay Pro</title>
+    <title>Multi Lay Calculator</title>
+    
+    <!-- Unique Multi-Lay Icon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎯</text></svg>">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
@@ -22,19 +26,24 @@
             --text-muted: #a1a1aa;    /* Zinc 400 */
             
             /* Brand & Accents */
-            --primary: #3b82f6;       /* Blue 500 */
-            --primary-glow: rgba(59, 130, 246, 0.5);
-            --primary-hover: #2563eb; /* Blue 600 */
+            --primary: #14b8a6;       /* Teal 500 Theme for Multi-Lay */
+            --primary-glow: rgba(20, 184, 166, 0.4);
+            --primary-hover: #0d9488; /* Teal 600 */
             
             /* Status Colors */
-            --success: #10b981;       /* Emerald 500 */
+            --success: #10b981;       
             --success-bg: rgba(16, 185, 129, 0.1);
-            --danger: #ef4444;        /* Red 500 */
+            --danger: #ef4444;        
             --danger-bg: rgba(239, 68, 68, 0.1);
             
             --warning-border: #b45309;
             --warning-bg: rgba(180, 83, 9, 0.1);
             --warning-text: #f59e0b;
+            
+            /* Override Theme Colors */
+            --override-border: rgba(20, 184, 166, 0.5);
+            --override-bg: rgba(20, 184, 166, 0.05);
+            --override-text: #2dd4bf;
         }
 
         body { 
@@ -90,7 +99,7 @@
             border-radius: 16px;
             box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7);
             border: 1px solid var(--border);
-            border-top: 1px solid #3f3f46; /* Subtle top highlight */
+            border-top: 1px solid #3f3f46;
             overflow: hidden;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
@@ -150,7 +159,6 @@
             box-shadow: 0 0 0 2px var(--primary-glow), inset 0 2px 4px rgba(0,0,0,0.2);
         }
 
-        /* Number input arrows disabled for cleaner look */
         input[type="number"]::-webkit-inner-spin-button, 
         input[type="number"]::-webkit-outer-spin-button { 
             -webkit-appearance: none; 
@@ -263,6 +271,52 @@
             color: var(--danger);
             text-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
         }
+
+        /* Standardized Lay Strategy UI applied to Global Multiplier */
+        .strategy-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: var(--bg-main);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .strategy-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-strat {
+            flex: 1;
+            padding: 6px;
+            font-size: 0.75rem;
+            background: var(--accent);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 800;
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+        .btn-strat:hover, .btn-strat.active {
+            background: var(--override-bg);
+            border-color: var(--override-border);
+            color: var(--override-text);
+        }
+
+        .override-input { 
+            background-color: var(--override-bg); 
+            border-color: var(--override-border); 
+            color: var(--override-text); 
+            font-weight: 700;
+            font-size: 1.1rem;
+            width: 90px;
+        }
+        .override-input:focus { border-color: var(--override-text); box-shadow: 0 0 0 2px rgba(20, 184, 166, 0.2), inset 0 2px 4px rgba(0,0,0,0.2); }
+
 
         /* Custom Modern Range Slider */
         input[type="range"] {
@@ -490,6 +544,24 @@
         renderWorkspace();
     }
 
+    function resetCalc(id) {
+        const inst = mlInstances.find(item => item.id === id);
+        if (!inst) return;
+        
+        inst.betType = "normal";
+        inst.backStake = "";
+        inst.backOdds = "";
+        inst.commission = "";
+        inst.globalMultiplier = 100;
+        inst.legs = [
+            { name: "", odds: "", bias: 100 },
+            { name: "", odds: "", bias: 100 }
+        ];
+        
+        saveState();
+        renderWorkspace();
+    }
+
     function addLegToInstance(id) {
         const inst = mlInstances.find(item => item.id === id);
         if (inst && inst.legs.length < 6) { 
@@ -516,13 +588,23 @@
             inst.legs[index][key] = value;
             if (key === 'bias') {
                 const label = document.getElementById(`bias_label_${id}_${index}`);
+                const slider = document.getElementById(`bias_slider_${id}_${index}`);
                 if (label) label.innerText = value;
+                if (slider && document.activeElement !== slider) slider.value = value;
             }
         } else {
             inst[key] = value;
             if (key === 'globalMultiplier') {
-                const label = document.getElementById(`global_label_${id}`);
-                if (label) label.innerText = value;
+                const numInput = document.getElementById(`global_override_${id}`);
+                const slider = document.getElementById(`global_slider_${id}`);
+                if (numInput && document.activeElement !== numInput) numInput.value = value;
+                if (slider && document.activeElement !== slider) slider.value = value;
+                
+                // Update active strategy buttons visually
+                document.querySelectorAll(`#strat_group_${id} .btn-strat`).forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.dataset.val === String(value)) btn.classList.add('active');
+                });
             }
         }
         
@@ -630,8 +712,11 @@
                             <input type="number" value="${leg.odds}" step="0.05" placeholder="Odds" oninput="updateField(${inst.id}, 'odds', this.value, ${index})">
                         </div>
                         <div class="input-wrap" data-label="Weight / Bias">
-                            <label style="margin-bottom:0; color:var(--primary);">Bias: <span id="bias_label_${inst.id}_${index}">${leg.bias}</span>%</label>
-                            <input type="range" class="lay-slider" min="0" max="150" step="1" value="${leg.bias}" oninput="updateField(${inst.id}, 'bias', this.value, ${index})">
+                            <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                                <label style="margin-bottom:0; color:var(--override-text);">Bias: <span id="bias_label_${inst.id}_${index}">${leg.bias}</span>%</label>
+                                <button class="btn" style="background: var(--bg-main); color: var(--text-muted); border: 1px solid var(--border); padding: 2px 8px; font-size: 0.65rem;" onclick="updateField(${inst.id}, 'bias', 100, ${index})" title="Reset to 100%">↺ 100%</button>
+                            </div>
+                            <input type="range" id="bias_slider_${inst.id}_${index}" min="0" max="200" step="1" value="${leg.bias}" oninput="updateField(${inst.id}, 'bias', this.value, ${index})">
                         </div>
                         <div class="input-wrap" data-label="Calculated Lay">
                             <div class="calculated-display" data-mobile-label="Calculated Lay" id="advised_${inst.id}_${index}">£0.00</div>
@@ -647,7 +732,10 @@
             card.innerHTML = `
                 <div class="acca-header">
                     <input type="text" class="title-input" value="${inst.title}" oninput="updateField(${inst.id}, 'title', this.value)">
-                    <button class="btn btn-danger" onclick="removeInstance(${inst.id})">Delete Session</button>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn" style="background: transparent; color: var(--text-muted); border: 1px solid var(--border);" onclick="resetCalc(${inst.id})">Reset</button>
+                        <button class="btn btn-danger" onclick="removeInstance(${inst.id})">Close</button>
+                    </div>
                 </div>
                 <div class="acca-body">
                     <div class="config-bar">
@@ -685,11 +773,22 @@
                     </div>
 
                     <div class="controls-footer">
-                        <div style="flex:1; max-width: 400px;">
-                            <label style="color:var(--primary); font-size:0.8rem;">Global Scaling Multiplier: <span id="global_label_${inst.id}">${inst.globalMultiplier}</span>%</label>
-                            <input type="range" class="lay-slider" min="0" max="150" step="1" value="${inst.globalMultiplier}" oninput="updateField(${inst.id}, 'globalMultiplier', this.value)">
+                        <div class="strategy-group" id="strat_group_${inst.id}" style="flex:1; max-width: 450px; margin: 0;">
+                            <label style="color:var(--override-text);">Global Scaling Multiplier</label>
+                            <div class="strategy-buttons">
+                                <button class="btn-strat ${inst.globalMultiplier == 80 ? 'active' : ''}" data-val="80" onclick="updateField(${inst.id}, 'globalMultiplier', 80)">80% (Under)</button>
+                                <button class="btn-strat ${inst.globalMultiplier == 100 ? 'active' : ''}" data-val="100" onclick="updateField(${inst.id}, 'globalMultiplier', 100)">100% (Std)</button>
+                                <button class="btn-strat ${inst.globalMultiplier == 120 ? 'active' : ''}" data-val="120" onclick="updateField(${inst.id}, 'globalMultiplier', 120)">120% (Over)</button>
+                            </div>
+                            <div style="display: flex; gap: 15px; align-items: center; margin-top: 5px;">
+                                <div style="display:flex; align-items:center; gap: 4px;">
+                                    <input type="number" id="global_override_${inst.id}" class="override-input" step="1" value="${inst.globalMultiplier}" oninput="updateField(${inst.id}, 'globalMultiplier', this.value)">
+                                    <span style="color: var(--text-muted); font-weight: 800; font-size: 0.9rem;">%</span>
+                                </div>
+                                <input type="range" id="global_slider_${inst.id}" style="flex:1;" min="0" max="200" step="1" value="${inst.globalMultiplier}" oninput="updateField(${inst.id}, 'globalMultiplier', this.value)">
+                            </div>
                         </div>
-                        <button class="btn btn-secondary" style="border-color: var(--primary); color: var(--primary);" onclick="addLegToInstance(${inst.id})" ${inst.legs.length >= 6 ? 'disabled' : ''}>+ Add Leg</button>
+                        <button class="btn btn-secondary" style="border-color: var(--primary); color: var(--primary); height: fit-content; padding: 12px 24px;" onclick="addLegToInstance(${inst.id})" ${inst.legs.length >= 6 ? 'disabled' : ''}>+ Add Leg</button>
                     </div>
                     
                     <div class="outputs-section" style="margin-top: 30px;">
@@ -728,7 +827,6 @@
         });
     }
 
-    // Initialize application instead of just calling createNewInstance()
     init();
 </script>
 </body>
