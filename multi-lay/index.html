@@ -14,25 +14,25 @@
     <style>
         :root {
             /* Deep, modern dark mode palette */
-            --bg-main: #09090b;       /* Zinc 950 */
-            --card-bg: #18181b;       /* Zinc 900 */
-            --accent: #09090b;        /* Zinc 950 for inset areas */
-            --border: #27272a;        /* Zinc 800 */
-            --border-hover: #3f3f46;  /* Zinc 700 */
+            --bg-main: #09090b;      /* Zinc 950 */
+            --card-bg: #18181b;      /* Zinc 900 */
+            --accent: #09090b;       /* Zinc 950 for inset areas */
+            --border: #27272a;       /* Zinc 800 */
+            --border-hover: #3f3f46; /* Zinc 700 */
             
             /* Typography */
-            --text-main: #f4f4f5;     /* Zinc 50 */
-            --text-muted: #a1a1aa;    /* Zinc 400 */
+            --text-main: #f4f4f5;    /* Zinc 50 */
+            --text-muted: #a1a1aa;   /* Zinc 400 */
             
             /* Brand & Accents */
-            --primary: #14b8a6;       /* Teal 500 Theme for Multi-Lay */
+            --primary: #14b8a6;      /* Teal 500 Theme for Multi-Lay */
             --primary-glow: rgba(20, 184, 166, 0.4);
             --primary-hover: #0d9488; /* Teal 600 */
             
             /* Status Colors */
-            --success: #10b981;       
+            --success: #10b981;      
             --success-bg: rgba(16, 185, 129, 0.1);
-            --danger: #ef4444;        
+            --danger: #ef4444;       
             --danger-bg: rgba(239, 68, 68, 0.1);
             
             --warning-border: #b45309;
@@ -43,6 +43,10 @@
             --override-border: rgba(20, 184, 166, 0.5);
             --override-bg: rgba(20, 184, 166, 0.05);
             --override-text: #2dd4bf;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
         }
 
         body { 
@@ -145,7 +149,6 @@
             background: var(--bg-main);
             color: var(--text-main);
             font-family: inherit;
-            box-sizing: border-box;
             width: 100%;
             transition: all 0.2s ease;
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
@@ -349,7 +352,6 @@
 
         /* Output Tables */
         .outputs-table-wrapper {
-            overflow-x: auto;
             width: 100%;
             border: 1px solid var(--border);
             border-radius: 12px;
@@ -462,7 +464,7 @@
                 display: block;
                 margin-bottom: 4px;
             }
-            .input-wrap { width: 100%; box-sizing: border-box; }
+            .input-wrap { width: 100%; }
             .input-wrap::before {
                 content: attr(data-label);
                 display: block;
@@ -472,7 +474,47 @@
                 text-transform: uppercase;
                 margin-bottom: 6px;
             }
-            .outputs-table { min-width: 700px; }
+
+            /* Stacked Output Table Cards on Mobile */
+            .outputs-table-wrapper {
+                background: transparent;
+                border: none;
+            }
+            .outputs-table thead { display: none; }
+            .outputs-table, .outputs-table tbody, .outputs-table tr, .outputs-table td {
+                display: block;
+                width: 100%;
+            }
+            .outputs-table tr {
+                background: var(--accent);
+                border-radius: 12px;
+                margin-bottom: 15px;
+                border: 1px solid var(--border);
+                overflow: hidden;
+            }
+            .outputs-table td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                text-align: right;
+                padding: 12px 16px;
+                border-bottom: 1px solid var(--border);
+                border-left: none !important;
+            }
+            .outputs-table td:last-child {
+                border-bottom: none;
+            }
+            .outputs-table td::before {
+                content: attr(data-label);
+                font-weight: 800;
+                color: var(--text-muted);
+                text-transform: uppercase;
+                font-size: 0.75rem;
+                letter-spacing: 0.05em;
+                margin-right: 15px;
+                text-align: left;
+                flex-shrink: 0;
+            }
         }
     </style>
 </head>
@@ -599,7 +641,6 @@
                 if (numInput && document.activeElement !== numInput) numInput.value = value;
                 if (slider && document.activeElement !== slider) slider.value = value;
                 
-                // Update active strategy buttons visually
                 document.querySelectorAll(`#strat_group_${id} .btn-strat`).forEach(btn => {
                     btn.classList.remove('active');
                     if (btn.dataset.val === String(value)) btn.classList.add('active');
@@ -629,7 +670,6 @@
         let cumulativeLayWins = 0;
         let maxLiability = 0;
 
-        // Pass 1: Calculate raw stakes and liabilities
         inst.legs.forEach((leg, i) => {
             const lOdds = parseFloat(leg.odds) || 0;
             const lBias = (parseFloat(leg.bias) || 0) / 100;
@@ -639,7 +679,6 @@
                 layStake = (totalReturn / (lOdds - comm)) * lBias * globalMult;
             }
             
-            // Use Math.max to prevent negative liability on empty/weird odds
             const liability = layStake * (Math.max(1, lOdds) - 1); 
             const netLayWin = layStake * (1 - comm);
             
@@ -648,7 +687,6 @@
 
             legsData.push({ layStake, liability, netLayWin });
 
-            // Update UI elements directly for speed
             const advisedDisplay = document.getElementById(`advised_${id}_${i}`);
             if (advisedDisplay) advisedDisplay.innerText = `£${layStake.toFixed(2)}`;
             
@@ -662,29 +700,27 @@
 
         let html = '';
 
-        // Scenario 1: Back bet loses (Alternative outcome happens)
         const backLosesNet = cumulativeLayWins - netBackCost;
         
         html += `<tr>
-            <td><strong>Back Bet Loses / Alt. Outcome</strong></td>
-            <td style="color:${netBackCost > 0 ? 'var(--danger)' : 'var(--text-main)'}">£${(-netBackCost).toFixed(2)}</td>
-            <td style="color:var(--success)">+£${cumulativeLayWins.toFixed(2)}</td>
-            <td style="color:var(--text-muted)">-</td>
-            <td class="${backLosesNet >= 0 ? 'win-cell' : 'loss-cell'} mono-text">£${backLosesNet.toFixed(2)}</td>
+            <td data-label="Scenario Condition"><strong>Back Bet Loses / Alt. Outcome</strong></td>
+            <td data-label="Back Bet P/L" style="color:${netBackCost > 0 ? 'var(--danger)' : 'var(--text-main)'}">£${(-netBackCost).toFixed(2)}</td>
+            <td data-label="Winning Lays P/L" style="color:var(--success)">+£${cumulativeLayWins.toFixed(2)}</td>
+            <td data-label="Liability Paid" style="color:var(--text-muted)">-</td>
+            <td data-label="Net P&L Result" class="${backLosesNet >= 0 ? 'win-cell' : 'loss-cell'} mono-text">£${backLosesNet.toFixed(2)}</td>
         </tr>`;
 
-        // Scenarios 2+: Back bet wins because specific leg hit
         legsData.forEach((ld, i) => {
             const leg = inst.legs[i];
             const otherLaysWin = cumulativeLayWins - ld.netLayWin;
             const netTotal = backWinsPnl + otherLaysWin - ld.liability;
 
             html += `<tr>
-                <td>If <strong>${leg.name || `Leg ${i+1}`}</strong> Hits</td>
-                <td style="color:var(--success)">+£${backWinsPnl.toFixed(2)}</td>
-                <td style="color:var(--success)">+£${otherLaysWin.toFixed(2)}</td>
-                <td style="color:var(--danger)">-£${ld.liability.toFixed(2)}</td>
-                <td class="${netTotal >= 0 ? 'win-cell' : 'loss-cell'} mono-text">£${netTotal.toFixed(2)}</td>
+                <td data-label="Scenario Condition">If <strong>${leg.name || `Leg ${i+1}`}</strong> Hits</td>
+                <td data-label="Back Bet P/L" style="color:var(--success)">+£${backWinsPnl.toFixed(2)}</td>
+                <td data-label="Winning Lays P/L" style="color:var(--success)">+£${otherLaysWin.toFixed(2)}</td>
+                <td data-label="Liability Paid" style="color:var(--danger)">-£${ld.liability.toFixed(2)}</td>
+                <td data-label="Net P&L Result" class="${netTotal >= 0 ? 'win-cell' : 'loss-cell'} mono-text">£${netTotal.toFixed(2)}</td>
             </tr>`;
         });
 
@@ -710,7 +746,7 @@
                         <div class="input-wrap" data-label="Lay Odds">
                             <input type="number" value="${leg.odds}" step="0.05" placeholder="Odds" oninput="updateField(${inst.id}, 'odds', this.value, ${index})">
                         </div>
-                        <div class="input-wrap" data-label="Weight / Bias">
+                        <div class="input-wrap" data-label="Target Weight / Bias">
                             <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
                                 <label style="margin-bottom:0; color:var(--override-text);">Bias: <span id="bias_label_${inst.id}_${index}">${leg.bias}</span>%</label>
                                 <button class="btn" style="background: var(--bg-main); color: var(--text-muted); border: 1px solid var(--border); padding: 2px 8px; font-size: 0.65rem;" onclick="updateField(${inst.id}, 'bias', 100, ${index})" title="Reset to 100%">↺ 100%</button>
