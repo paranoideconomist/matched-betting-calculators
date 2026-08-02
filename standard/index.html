@@ -431,8 +431,8 @@
 <script>
     let calcInstances = [];
     let instanceIdCounter = 0;
-    const STORAGE_KEY = 'mbCalcsState_v2';
-    const ID_KEY = 'mbCalcIdCounter_v2';
+    const STORAGE_KEY = 'mbCalcsState_v3';
+    const ID_KEY = 'mbCalcIdCounter_v3';
 
     function init() {
         const savedData = localStorage.getItem(STORAGE_KEY);
@@ -551,6 +551,25 @@
         saveState();
         renderWorkspace();
     }
+    
+    // NEW FUNCTION: Locks in the currently calculated lay into the partials array
+    function lockInLay(id) {
+        const inst = calcInstances.find(item => item.id === id);
+        if (!inst || !inst.calcData || inst.calcData.usedLay <= 0) return;
+        
+        // Push the active lay stake and odds into the matched array
+        inst.partialLays.push({
+            stake: inst.calcData.usedLay.toFixed(2),
+            odds: inst.lOdds
+        });
+        
+        // Reset the active override so it calculates the new remainder correctly
+        inst.actualLay = null;
+        
+        calculateMath(inst, inst.activeStrategy);
+        saveState();
+        renderWorkspace();
+    }
 
     function setStrategy(id, strategy) {
         const inst = calcInstances.find(item => item.id === id);
@@ -622,16 +641,13 @@
             
             standardLay = (B - mDeduction) / (lOdds - lCommDec);
             
-            // Calculate both zero-liability targets
             let targetA = (backCost / (1 - lCommDec)) - mStake; 
             let targetB = (bookieWinProfitPreLay - mLiability) / (lOdds - 1);
             
-            // Underlay is always the smaller stake; Overlay is always the larger stake
             underlay = Math.min(targetA, targetB);
             overlay = Math.max(targetA, targetB);
         }
 
-        // Prevent negative lay suggestions if heavily partially matched
         standardLay = Math.max(0, standardLay);
         underlay = Math.max(0, underlay);
         overlay = Math.max(0, overlay);
@@ -798,16 +814,16 @@
                                     `).join('')}
                                 </div>
                             </div>
-
                         </div>
                     </div>
 
                     <div class="summary-panel">
                         <div class="big-display">
-                            <label>${inst.partialLays.length > 0 ? 'Remaining Lay Stake' : 'Standard Lay Stake'}</label>
+                            <label>${inst.partialLays.length > 0 ? 'Remaining Lay Stake' : 'Calculated Lay Stake'}</label>
                             <div style="display: flex; align-items: center; gap: 12px;">
                                 <div class="value" id="adv_${inst.id}">£0.00</div>
                                 <button id="copyBtn_${inst.id}" class="btn" style="background: var(--bg-main); border: 1px solid var(--border); color: var(--text-main); font-size: 0.75rem; padding: 6px 10px;" onclick="copyLayStake(${inst.id})">Copy</button>
+                                <button id="lockBtn_${inst.id}" class="btn" style="background: var(--primary); border: none; color: white; font-size: 0.75rem; padding: 6px 10px;" onclick="lockInLay(${inst.id})">🔒 Lock In</button>
                             </div>
                         </div>
                         <div class="big-display">
