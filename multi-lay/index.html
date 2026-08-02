@@ -32,7 +32,7 @@
             /* Status Colors */
             --success: #10b981;      
             --success-bg: rgba(16, 185, 129, 0.1);
-            --danger: #ef4444;       
+            --danger: #ef4444;        
             --danger-bg: rgba(239, 68, 68, 0.1);
             
             --warning-border: #b45309;
@@ -58,7 +58,6 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* Neon/Gradient Header */
         .workspace-header {
             max-width: 1400px;
             margin: 0 auto 20px auto;
@@ -94,7 +93,6 @@
             box-shadow: 0 0 10px var(--primary-glow);
         }
 
-        /* Cards */
         .acca-card {
             max-width: 1400px;
             margin: 0 auto 20px auto;
@@ -118,7 +116,6 @@
         
         .acca-body { padding: 20px; }
         
-        /* Layout Blocks */
         .config-bar { 
             display: grid; 
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
@@ -140,7 +137,6 @@
             margin-bottom: 6px;
         }
 
-        /* Modern Inputs */
         input, select, textarea {
             padding: 10px 12px;
             border: 1px solid var(--border);
@@ -194,7 +190,6 @@
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
         }
 
-        /* Buttons */
         .btn {
             padding: 8px 16px;
             border: none;
@@ -240,12 +235,11 @@
             color: var(--text-main);
         }
 
-        /* Leg Rows */
         .leg-row { 
             display: grid; 
             grid-template-columns: 2fr 1fr 2fr 1.2fr 1.2fr 40px; 
             gap: 12px; 
-            align-items: center; 
+            align-items: start; 
             background: var(--accent); 
             border: 1px solid var(--border); 
             padding: 12px; 
@@ -267,6 +261,7 @@
             font-family: 'JetBrains Mono', monospace;
             font-size: 1.05rem;
             text-shadow: 0 0 10px var(--primary-glow);
+            margin-top: 6px;
         }
         
         .liab-display {
@@ -274,7 +269,6 @@
             text-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
         }
 
-        /* Standardized Lay Strategy UI applied to Global Multiplier */
         .strategy-group {
             display: flex;
             flex-direction: column;
@@ -314,13 +308,11 @@
             border-color: var(--override-border); 
             color: var(--override-text); 
             font-weight: 700;
-            font-size: 1.1rem;
-            width: 90px;
+            font-size: 1rem;
+            font-family: 'JetBrains Mono', monospace;
         }
         .override-input:focus { border-color: var(--override-text); box-shadow: 0 0 0 2px rgba(20, 184, 166, 0.2), inset 0 2px 4px rgba(0,0,0,0.2); }
 
-
-        /* Custom Modern Range Slider */
         input[type="range"] {
             -webkit-appearance: none;
             width: 100%;
@@ -350,7 +342,6 @@
             transform: scale(1.2);
         }
 
-        /* Output Tables */
         .outputs-table-wrapper {
             width: 100%;
             border: 1px solid var(--border);
@@ -432,7 +423,6 @@
             letter-spacing: -0.02em;
         }
 
-        /* Mobile specific fixes */
         @media (max-width: 850px) {
             input, select, textarea { padding: 12px; font-size: 16px; }
             .btn { padding: 12px 20px; font-size: 1rem; }
@@ -454,6 +444,7 @@
                 background: rgba(255,255,255,0.03); 
                 border-radius: 8px; 
                 border: 1px solid var(--border);
+                margin: 0;
             }
             .calculated-display::before { 
                 content: attr(data-mobile-label); 
@@ -475,7 +466,6 @@
                 margin-bottom: 6px;
             }
 
-            /* Stacked Output Table Cards on Mobile */
             .outputs-table-wrapper {
                 background: transparent;
                 border: none;
@@ -531,9 +521,9 @@
     let mlInstances = [];
     let instanceIdCounter = 0;
     
-    // Constants for local storage
-    const STORAGE_KEY = 'mlCalcsState_v1';
-    const ID_KEY = 'mlCalcIdCounter_v1';
+    // Updated key for local storage state
+    const STORAGE_KEY = 'mlCalcsState_v2';
+    const ID_KEY = 'mlCalcIdCounter_v2';
 
     function autoGrow(element) {
         element.style.height = "auto";
@@ -546,6 +536,14 @@
             try {
                 mlInstances = JSON.parse(savedData);
                 instanceIdCounter = parseInt(localStorage.getItem(ID_KEY)) || mlInstances.length;
+                
+                // State Migration for partialLays per leg
+                mlInstances.forEach(inst => {
+                    inst.legs.forEach(leg => {
+                        if (!leg.partialLays) leg.partialLays = [];
+                    });
+                });
+
                 renderWorkspace();
             } catch (e) {
                 createNewInstance();
@@ -571,8 +569,8 @@
             commission: "",
             globalMultiplier: 100,
             legs: [
-                { name: "", odds: "", bias: 100 },
-                { name: "", odds: "", bias: 100 }
+                { name: "", odds: "", bias: 100, actualLay: "", partialLays: [] },
+                { name: "", odds: "", bias: 100, actualLay: "", partialLays: [] }
             ]
         });
         saveState();
@@ -595,8 +593,8 @@
         inst.commission = "";
         inst.globalMultiplier = 100;
         inst.legs = [
-            { name: "", odds: "", bias: 100 },
-            { name: "", odds: "", bias: 100 }
+            { name: "", odds: "", bias: 100, actualLay: "", partialLays: [] },
+            { name: "", odds: "", bias: 100, actualLay: "", partialLays: [] }
         ];
         
         saveState();
@@ -605,8 +603,8 @@
 
     function addLegToInstance(id) {
         const inst = mlInstances.find(item => item.id === id);
-        if (inst && inst.legs.length < 6) { 
-            inst.legs.push({ name: "", odds: "", bias: 100 });
+        if (inst && inst.legs.length < 8) { 
+            inst.legs.push({ name: "", odds: "", bias: 100, actualLay: "", partialLays: [] });
             saveState();
             renderWorkspace();
         }
@@ -619,6 +617,32 @@
             saveState();
             renderWorkspace();
         }
+    }
+
+    function addPartialLay(id, legIndex) {
+        const inst = mlInstances.find(item => item.id === id);
+        if (!inst) return;
+        inst.legs[legIndex].partialLays.push({ stake: "", odds: "", comm: "" });
+        calculateInstance(id);
+        saveState();
+        renderWorkspace();
+    }
+
+    function updatePartialLay(id, legIndex, pIndex, key, value) {
+        const inst = mlInstances.find(item => item.id === id);
+        if (!inst) return;
+        inst.legs[legIndex].partialLays[pIndex][key] = value;
+        calculateInstance(id);
+        saveState();
+    }
+
+    function removePartialLay(id, legIndex, pIndex) {
+        const inst = mlInstances.find(item => item.id === id);
+        if (!inst) return;
+        inst.legs[legIndex].partialLays.splice(pIndex, 1);
+        calculateInstance(id);
+        saveState();
+        renderWorkspace();
     }
 
     function updateField(id, key, value, index = null) {
@@ -659,7 +683,7 @@
         const isSNR = (inst.betType === 'snr');
         const bStake = parseFloat(inst.backStake) || 0;
         const bOdds = parseFloat(inst.backOdds) || 0;
-        const comm = (parseFloat(inst.commission) || 0) / 100;
+        const globalComm = (parseFloat(inst.commission) || 0) / 100;
         const globalMult = (parseFloat(inst.globalMultiplier) || 0) / 100;
         
         const totalReturn = isSNR ? (bStake * (bOdds - 1)) : (bStake * bOdds);
@@ -674,24 +698,69 @@
             const lOdds = parseFloat(leg.odds) || 0;
             const lBias = (parseFloat(leg.bias) || 0) / 100;
             
-            let layStake = 0;
+            let targetAdvisedLay = 0;
             if (lOdds > 1 && totalReturn > 0) {
-                layStake = (totalReturn / (lOdds - comm)) * lBias * globalMult;
+                targetAdvisedLay = (totalReturn / (lOdds - globalComm)) * lBias * globalMult;
             }
-            
-            const liability = layStake * (Math.max(1, lOdds) - 1); 
-            const netLayWin = layStake * (1 - comm);
-            
-            cumulativeLayWins += netLayWin;
-            if (liability > maxLiability) maxLiability = liability;
 
-            legsData.push({ layStake, liability, netLayWin });
+            // Sum up existing matched partial lays for this selection
+            let pStakeSum = 0;
+            let pLiabilitySum = 0;
+            let pNetPayoutSum = 0;
+
+            if (leg.partialLays && leg.partialLays.length > 0) {
+                leg.partialLays.forEach(p => {
+                    let ps = parseFloat(p.stake) || 0;
+                    let po = parseFloat(p.odds) || 0;
+                    let pc = (parseFloat(p.comm !== "" && p.comm !== undefined ? p.comm : inst.commission) || 0) / 100;
+                    
+                    pStakeSum += ps;
+                    pLiabilitySum += ps * Math.max(0, po - 1);
+                    pNetPayoutSum += ps * (1 - pc);
+                });
+            }
+
+            const usedVal = parseFloat(leg.actualLay);
+            const remainingLayToPlace = isNaN(usedVal) ? Math.max(0, targetAdvisedLay - pStakeSum) : usedVal;
+            
+            const remainingLiability = remainingLayToPlace * (Math.max(1, lOdds) - 1);
+            const remainingNetPayout = remainingLayToPlace * (1 - globalComm);
+
+            const totalSelectionStake = pStakeSum + remainingLayToPlace;
+            const totalSelectionLiability = pLiabilitySum + remainingLiability;
+            const totalSelectionNetLayWin = pNetPayoutSum + remainingNetPayout;
+            
+            cumulativeLayWins += totalSelectionNetLayWin;
+            if (totalSelectionLiability > maxLiability) maxLiability = totalSelectionLiability;
+
+            legsData.push({ 
+                targetAdvisedLay, 
+                totalSelectionStake,
+                totalSelectionLiability, 
+                totalSelectionNetLayWin 
+            });
 
             const advisedDisplay = document.getElementById(`advised_${id}_${i}`);
-            if (advisedDisplay) advisedDisplay.innerText = `£${layStake.toFixed(2)}`;
+            if (advisedDisplay) advisedDisplay.innerText = `£${targetAdvisedLay.toFixed(2)}`;
             
             const liabDisplay = document.getElementById(`liab_${id}_${i}`);
-            if (liabDisplay) liabDisplay.innerText = `£${liability.toFixed(2)}`;
+            if (liabDisplay) liabDisplay.innerText = `£${totalSelectionLiability.toFixed(2)}`;
+
+            const inputEl = document.getElementById(`override_${id}_${i}`);
+            const sliderEl = document.getElementById(`slider_${id}_${i}`);
+
+            if (inputEl && document.activeElement !== inputEl) {
+                inputEl.value = (leg.actualLay === '' || leg.actualLay === undefined) ? '' : remainingLayToPlace.toFixed(2);
+                inputEl.placeholder = `£${Math.max(0, targetAdvisedLay - pStakeSum).toFixed(2)}`;
+            }
+
+            if (sliderEl) {
+                const calculatedMax = Math.max(targetAdvisedLay * 2, remainingLayToPlace, 0.01);
+                sliderEl.max = calculatedMax.toFixed(2);
+                if (document.activeElement !== sliderEl) {
+                    sliderEl.value = remainingLayToPlace.toFixed(2);
+                }
+            }
         });
 
         const resultsTable = document.getElementById(`results_${id}`);
@@ -712,14 +781,14 @@
 
         legsData.forEach((ld, i) => {
             const leg = inst.legs[i];
-            const otherLaysWin = cumulativeLayWins - ld.netLayWin;
-            const netTotal = backWinsPnl + otherLaysWin - ld.liability;
+            const otherLaysWin = cumulativeLayWins - ld.totalSelectionNetLayWin;
+            const netTotal = backWinsPnl + otherLaysWin - ld.totalSelectionLiability;
 
             html += `<tr>
                 <td data-label="Scenario Condition">If <strong>${leg.name || `Leg ${i+1}`}</strong> Hits</td>
                 <td data-label="Back Bet P/L" style="color:var(--success)">+£${backWinsPnl.toFixed(2)}</td>
                 <td data-label="Winning Lays P/L" style="color:var(--success)">+£${otherLaysWin.toFixed(2)}</td>
-                <td data-label="Liability Paid" style="color:var(--danger)">-£${ld.liability.toFixed(2)}</td>
+                <td data-label="Liability Paid" style="color:var(--danger)">-£${ld.totalSelectionLiability.toFixed(2)}</td>
                 <td data-label="Net P&L Result" class="${netTotal >= 0 ? 'win-cell' : 'loss-cell'} mono-text">£${netTotal.toFixed(2)}</td>
             </tr>`;
         });
@@ -738,6 +807,23 @@
             
             let legsHtml = '';
             inst.legs.forEach((leg, index) => {
+                const partialsCount = leg.partialLays ? leg.partialLays.length : 0;
+                
+                let partialRowsHtml = '';
+                if (leg.partialLays && leg.partialLays.length > 0) {
+                    partialRowsHtml = leg.partialLays.map((p, pIdx) => `
+                        <div style="display: flex; gap: 8px; align-items: center; margin-top: 6px; background: rgba(0,0,0,0.3); padding: 6px 8px; border-radius: 6px; border: 1px solid var(--border);">
+                            <div style="flex:1;">
+                                <input type="number" step="0.01" value="${p.stake}" placeholder="Stake (£)" style="padding:4px 8px; font-size:0.8rem;" oninput="updatePartialLay(${inst.id}, ${index}, ${pIdx}, 'stake', this.value)">
+                            </div>
+                            <div style="flex:1;">
+                                <input type="number" step="0.01" value="${p.odds}" placeholder="Odds" style="padding:4px 8px; font-size:0.8rem;" oninput="updatePartialLay(${inst.id}, ${index}, ${pIdx}, 'odds', this.value)">
+                            </div>
+                            <button class="btn" style="background:transparent; color:var(--danger); border:1px solid var(--danger); padding:2px 8px; font-size:0.75rem;" onclick="removePartialLay(${inst.id}, ${index}, ${pIdx})">✕</button>
+                        </div>
+                    `).join('');
+                }
+
                 legsHtml += `
                     <div class="leg-row">
                         <div class="input-wrap" data-label="Event / Selection">
@@ -753,13 +839,27 @@
                             </div>
                             <input type="range" id="bias_slider_${inst.id}_${index}" min="0" max="200" step="1" value="${leg.bias}" oninput="updateField(${inst.id}, 'bias', this.value, ${index})">
                         </div>
-                        <div class="input-wrap" data-label="Calculated Lay">
+                        <div class="input-wrap" data-label="Calculated Target">
                             <div class="calculated-display" data-mobile-label="Calculated Lay" id="advised_${inst.id}_${index}">£0.00</div>
                         </div>
-                        <div class="input-wrap" data-label="Liability">
+                        <div class="input-wrap" data-label="Total Exposure">
                             <div class="calculated-display liab-display" data-mobile-label="Liability" id="liab_${inst.id}_${index}">£0.00</div>
                         </div>
                         <button class="btn-secondary close-btn" style="border-radius:8px; width:32px; height:32px; padding:0; cursor:pointer;" onclick="removeLegFromInstance(${inst.id}, ${index})" ${inst.legs.length <= 2 ? 'disabled style="opacity:0.2;"' : ''}>✕</button>
+
+                        <!-- Sub-panel for Partial Lay Entries -->
+                        <div style="grid-column: 1 / -1; margin-top: 4px; background: rgba(255,255,255,0.02); padding: 10px; border-radius: 8px; border: 1px solid var(--border);">
+                            <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <button class="btn" style="background: var(--bg-main); color: var(--primary); border: 1px solid var(--primary); padding: 4px 8px; font-size: 0.75rem; border-radius: 6px;" onclick="addPartialLay(${inst.id}, ${index})">+ Add Matched Lay</button>
+                                <div style="display:flex; gap:10px; align-items:center;">
+                                    <label style="margin:0; font-size:0.7rem;">Additional Lay Stake Required:</label>
+                                    <input type="number" id="override_${inst.id}_${index}" class="override-input" value="${leg.actualLay || ''}" placeholder="${partialsCount > 0 ? 'Remaining Lay' : '£0.00'}" step="0.01" style="width:120px; padding:4px 8px;" oninput="updateField(${inst.id}, 'actualLay', this.value, ${index})">
+                                    <button class="btn" style="background: transparent; color: var(--text-muted); border: 1px solid var(--border); padding: 2px 6px; font-size: 0.65rem; border-radius: 4px;" onclick="updateField(${inst.id}, 'actualLay', '', ${index})" title="Reset to target">↺ Reset</button>
+                                </div>
+                            </div>
+                            <input type="range" id="slider_${inst.id}_${index}" class="lay-slider" min="0" max="100" step="0.01" value="${leg.actualLay || 0}" oninput="updateField(${inst.id}, 'actualLay', this.value, ${index})">
+                            ${partialRowsHtml}
+                        </div>
                     </div>
                 `;
             });
@@ -800,8 +900,8 @@
                             <div>Outcome Selection</div>
                             <div>Lay Odds</div>
                             <div>Target Weight / Bias</div>
-                            <div style="text-align: right; padding-right: 10px;">Calculated Lay</div>
-                            <div style="text-align: right; padding-right: 10px;">Liability</div>
+                            <div style="text-align: right; padding-right: 10px;">Calculated Target</div>
+                            <div style="text-align: right; padding-right: 10px;">Total Exposure</div>
                             <div></div>
                         </div>
                         ${legsHtml}
@@ -823,7 +923,7 @@
                                 <input type="range" id="global_slider_${inst.id}" style="flex:1;" min="0" max="200" step="1" value="${inst.globalMultiplier}" oninput="updateField(${inst.id}, 'globalMultiplier', this.value)">
                             </div>
                         </div>
-                        <button class="btn btn-secondary" style="border-color: var(--primary); color: var(--primary); height: fit-content; padding: 12px 24px;" onclick="addLegToInstance(${inst.id})" ${inst.legs.length >= 6 ? 'disabled' : ''}>+ Add Leg</button>
+                        <button class="btn btn-secondary" style="border-color: var(--primary); color: var(--primary); height: fit-content; padding: 12px 24px;" onclick="addLegToInstance(${inst.id})" ${inst.legs.length >= 8 ? 'disabled' : ''}>+ Add Selection</button>
                     </div>
                     
                     <div class="outputs-section" style="margin-top: 30px;">
