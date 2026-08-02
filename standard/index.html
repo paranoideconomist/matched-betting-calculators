@@ -218,6 +218,8 @@
             box-shadow: none;
             font-family: 'Plus Jakarta Sans', sans-serif;
             color: var(--text-main);
+            min-width: 0;
+            width: 100%;
         }
         
         .title-input:focus {
@@ -729,7 +731,7 @@
             card.innerHTML = `
                 <div class="calc-header">
                     <input type="text" class="title-input" value="${inst.title}" oninput="updateField(${inst.id}, 'title', this.value)">
-                    <div style="display: flex; gap: 10px;">
+                    <div style="display: flex; gap: 10px; flex-shrink: 0;">
                         <button class="btn" style="background: transparent; color: var(--text-muted); border: 1px solid var(--border);" onclick="resetCalc(${inst.id})">Reset</button>
                         <button class="btn btn-danger" onclick="removeInstance(${inst.id})">Close</button>
                     </div>
